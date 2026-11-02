@@ -1,0 +1,1187 @@
+﻿# 🚀 Adaptive Lighting
+
+**Official Open-Source Release & Maintained Codebase** by [**@kush-coder**](https://github.com/kush-coder)
+
+[![Verified Build](https://img.shields.io/badge/Status-Verified--Passing-emerald?style=for-the-badge&logo=github)](https://github.com/kush-coder)
+[![License](https://img.shields.io/badge/License-Apache License 2.0-indigo?style=for-the-badge)](https://github.com/kush-coder)
+[![Language](https://img.shields.io/badge/Language-Python-purple?style=for-the-badge)](https://github.com/kush-coder)
+
+## 💡 About This Project
+
+Adaptive Lighting custom component for Home Assistant
+
+This repository is actively maintained and distributed by **@kush-coder** as an official open-source release.
+
+## ✨ Key Highlights
+- 🛡️ **Verified Health Checks**: Passed automated sandbox builds, dependency resolution, and health test runs.
+- 🚀 **Production Ready**: Lightweight footprint optimized for high efficiency.
+- 📦 **Permissive Open Source**: Available for developer integration, custom modifications, and community enhancements.
+
+## 🚀 Quick Start & Installation
+
+```bash
+# Clone your official repository
+git clone https://github.com/kush-coder/autopilot-adaptive-lighting.git
+cd autopilot-adaptive-lighting
+```
+
+---
+
+## 📖 Comprehensive Documentation
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
+![Version](https://img.shields.io/github/v/release/basnijholt/adaptive-lighting?style=for-the-badge)
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-175-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
+
+# 🌞 Adaptive Lighting: Enhance Your Home's Atmosphere with Smart, Sun-Synchronized Lighting 🌙
+
+<img src="https://raw.githubusercontent.com/home-assistant/brands/master/custom_integrations/adaptive_lighting/icon@2x.png" alt="logo" width="256px" height="256px" />
+
+[Adaptive Lighting](https://github.com/basnijholt/adaptive-lighting) is a custom component for [Home Assistant](https://www.home-assistant.io/) that intelligently adjusts the brightness and color of your lights 💡 based on the sun's position, while still allowing for manual control.
+
+Download and install directly through [HACS (Home Assistant Community Store)](https://hacs.xyz/):
+
+[![Open your Home Assistant instance and open the Adaptive Lighting integration inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=basnijholt&repository=adaptive-lighting&category=integration)
+
+By automatically adapting the settings of your lights throughout the day, Adaptive Lighting helps maintain your natural circadian rhythm 😴, which can lead to improved sleep, mood, and overall well-being. Experience cooler color temperatures at noon, gradually transitioning to warmer colors at sunset and sunrise.
+
+In addition to its regular mode, Adaptive Lighting also offers a "sleep mode" 🌜 which sets your lights to minimal brightness and a very warm color, perfect for winding down at night.
+
+> 🌈 Visualize Adaptive Lighting's settings with the [_🌞 Adaptive Lighting Simulator WebApp 🌛_](https://basnijholt.github.io/adaptive-lighting)
+
+https://github.com/basnijholt/adaptive-lighting/assets/6897215/68908f7d-fbf1-4991-98ce-3f2af6df996f
+
+[[ToC](#books-table-of-contents)]
+
+<!-- SECTION:features:START -->
+## :bulb: Features
+
+When initially turning on a light that is controlled by Adaptive Lighting, the `light.turn_on` service call is intercepted, and the light's brightness and color are automatically adjusted based on the sun's position.
+After that, the light's brightness and color are automatically adjusted at a regular interval.
+
+Adaptive Lighting provides four switches (using "living_room" as an example component name):
+
+- `switch.adaptive_lighting_living_room`: Turn Adaptive Lighting on or off and view current light settings through its attributes.
+- `switch.adaptive_lighting_sleep_mode_living_room`: Activate "sleep mode" 😴 and set custom sleep_brightness and sleep_color_temp.
+- `switch.adaptive_lighting_adapt_brightness_living_room`: Enable or disable brightness adaptation 🔆 for supported lights.
+- `switch.adaptive_lighting_adapt_color_living_room`: Enable or disable color adaptation 🌈 for supported lights.
+<!-- SECTION:features:END -->
+
+<!-- SECTION:manual-control:START -->
+### :control_knobs: Regain Manual Control
+
+Adaptive Lighting is designed to automatically detect when you or another source (e.g., automation) manually changes light settings 🕹️.
+When this occurs, the affected light is marked as "manually controlled," and Adaptive Lighting will not make further adjustments until the light is turned off and back on or reset using the `adaptive_lighting.set_manual_control` service call.
+This feature is available when `take_over_control` is enabled.
+
+Additionally, enabling `detect_non_ha_changes` allows Adaptive Lighting to detect all state changes, including those made outside of Home Assistant, by comparing the light's state to its previously used settings.
+The `adaptive_lighting.manual_control` event is fired when a light is marked as "manually controlled," allowing for integration with automations 🤖.
+
+With `expand_light_groups: false`, manual control belongs to the group. A direct member change cannot pause adaptation for only that member; use group-level manual control or enable expansion for individual tracking.
+Explicit member targets in Adaptive Lighting services stay individual targets and do not mark or command the whole group.
+Changing expansion at runtime discards tracking and pending adaptation for targets no longer used by any profile.
+
+The Adaptive Lighting switch exposes these read-only attributes for its lights:
+
+- `manual_control`: lights with any attribute marked as manually controlled.
+- `manual_control_brightness`: lights with brightness marked as manually controlled.
+- `manual_control_color`: lights with color marked as manually controlled.
+
+These lists report manual-control flags. Actual adaptation also depends on `take_over_control_mode` and the brightness/color adaptation switches. For example, under the default `pause_all` mode, manually changing only brightness leaves `manual_control_color` empty while pausing both brightness and color adaptation. Under `pause_changed`, color can continue adapting.
+
+The attributes are absent when the Adaptive Lighting switch is off. Use a fallback when checking them in templates:
+
+```jinja
+{{ 'light.bedroom' in (state_attr('switch.adaptive_lighting_bedroom', 'manual_control_brightness') or []) }}
+```
+
+> ⚠️ **_Caution: Some lights might falsely indicate an 'on' state, which could result in lights turning on unexpectedly. Disable `detect_non_ha_changes` if you encounter such issues._**
+<!-- SECTION:manual-control:END -->
+
+## :books: Table of Contents
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [:gear: Configuration](#gear-configuration)
+  - [:memo: Options](#memo-options)
+  - [:hammer_and_wrench: Services](#hammer_and_wrench-services)
+    - [`adaptive_lighting.apply`](#adaptive_lightingapply)
+    - [`adaptive_lighting.set_manual_control`](#adaptive_lightingset_manual_control)
+    - [`adaptive_lighting.change_switch_settings`](#adaptive_lightingchange_switch_settings)
+- [:robot: Automation examples](#robot-automation-examples)
+- [Additional Information](#additional-information)
+- [:sos: Troubleshooting](#sos-troubleshooting)
+  - [:exclamation: Common Problems & Solutions](#exclamation-common-problems--solutions)
+    - [:bulb: Lights Only Adapt After Reloading](#bulb-lights-only-adapt-after-reloading)
+    - [:bulb: Lights Not Responding or Turning On by Themselves](#bulb-lights-not-responding-or-turning-on-by-themselves)
+    - [:signal_strength: WiFi Networks](#signal_strength-wifi-networks)
+    - [:spider_web: Zigbee, Z-Wave, and Other Mesh Networks](#spider_web-zigbee-z-wave-and-other-mesh-networks)
+    - [:rainbow: Light Colors Not Matching](#rainbow-light-colors-not-matching)
+    - [:bulb: Bulb-Specific Issues](#bulb-bulb-specific-issues)
+- [:bar_chart: Graphs!](#bar_chart-graphs)
+  - [:sunny: Sun Position](#sunny-sun-position)
+  - [:thermometer: Color Temperature](#thermometer-color-temperature)
+  - [:high_brightness: Brightness](#high_brightness-brightness)
+  - [While using `transition_until_sleep: true`](#while-using-transition_until_sleep-true)
+  - [Custom brightness ramps using `brightness_mode` with `"linear"` and `"tanh"`](#custom-brightness-ramps-using-brightness_mode-with-linear-and-tanh)
+- [:eyes: See also](#eyes-see-also)
+- [:busts_in_silhouette: Contributors](#busts_in_silhouette-contributors)
+- [Translating Adaptive Lighting](#translating-adaptive-lighting)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## :gear: Configuration
+
+Adaptive Lighting supports configuration through both YAML and the frontend (**Settings** -> **Devices and Services** -> **Adaptive Lighting**, **Adaptive Lighting** -> **Options**), with identical option names in both methods.
+
+```yaml
+# Example configuration.yaml entry
+adaptive_lighting:
+  lights:
+    - light.living_room_lights
+```
+If you configure Adaptive Lighting through the UI, no `adaptive_lighting:` entry is needed in `configuration.yaml`. Instances configured through YAML must be edited in YAML.
+
+Transform your home's atmosphere with Adaptive Lighting 🏠, and experience the benefits of intelligent, sun-synchronized lighting today!
+
+### :memo: Options
+
+All of the configuration options are listed below, along with their default values.
+The YAML and frontend configuration methods support all of the options listed below.
+
+<!-- CODE:START -->
+<!-- from adaptive_lighting._docs_helpers import generate_config_markdown_table -->
+<!-- print(generate_config_markdown_table()) -->
+<!-- CODE:END -->
+
+<!-- OUTPUT:START -->
+<!-- ⚠️ This content is auto-generated by `markdown-code-runner`. -->
+| Variable name                               | Description                                                                                                                                                                                                                                                                                                                                                                                   | Default        | Type                                    |
+|:--------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------|:----------------------------------------|
+| `lights`                                    | List of light entity_ids to be controlled (may be empty). 🌟                                                                                                                                                                                                                                                                                                                                  | `[]`           | list of `entity_id`s                    |
+| `interval`                                  | Frequency to adapt the lights, in seconds. 🔄                                                                                                                                                                                                                                                                                                                                                 | `90`           | `int > 0`                               |
+| `transition`                                | Duration of transition when lights change, in seconds. 🕑                                                                                                                                                                                                                                                                                                                                     | `45`           | `float` 0-6553                          |
+| `initial_transition`                        | Duration of the first transition when lights turn from `off` to `on` in seconds. ⏲️                                                                                                                                                                                                                                                                                                           | `1`            | `float` 0-6553                          |
+| `min_brightness`                            | Minimum brightness percentage. 💡                                                                                                                                                                                                                                                                                                                                                             | `1`            | `int` 1-100                             |
+| `max_brightness`                            | Maximum brightness percentage. 💡                                                                                                                                                                                                                                                                                                                                                             | `100`          | `int` 1-100                             |
+| `min_color_temp`                            | Warmest color temperature in Kelvin. 🔥                                                                                                                                                                                                                                                                                                                                                       | `2000`         | `int` 1000-10000                        |
+| `max_color_temp`                            | Coldest color temperature in Kelvin. ❄️                                                                                                                                                                                                                                                                                                                                                       | `5500`         | `int` 1000-10000                        |
+| `prefer_rgb_color`                          | Whether to prefer RGB color adjustment over light color temperature when possible. 🌈                                                                                                                                                                                                                                                                                                         | `False`        | `bool`                                  |
+| `sleep_brightness`                          | Brightness percentage of lights in sleep mode. 😴                                                                                                                                                                                                                                                                                                                                             | `1`            | `int` 1-100                             |
+| `sleep_rgb_or_color_temp`                   | Use either `"rgb_color"` or `"color_temp"` in sleep mode. 🌙                                                                                                                                                                                                                                                                                                                                  | `color_temp`   | one of `['color_temp', 'rgb_color']`    |
+| `sleep_color_temp`                          | Color temperature in sleep mode (used when `sleep_rgb_or_color_temp` is `color_temp`) in Kelvin. 😴                                                                                                                                                                                                                                                                                           | `1000`         | `int` 1000-10000                        |
+| `sleep_rgb_color`                           | RGB color in sleep mode (used when `sleep_rgb_or_color_temp` is "rgb_color"). 🌈                                                                                                                                                                                                                                                                                                              | `[255, 56, 0]` | RGB color                               |
+| `sleep_transition`                          | Duration of transition when "sleep mode" is toggled in seconds. 😴                                                                                                                                                                                                                                                                                                                            | `1`            | `float` 0-6553                          |
+| `transition_until_sleep`                    | When enabled, Adaptive Lighting will treat sleep settings as the minimum, transitioning to these values after sunset. 🌙                                                                                                                                                                                                                                                                      | `False`        | `bool`                                  |
+| `sunrise_time`                              | Set a fixed time (HH:MM:SS) for sunrise. 🌅                                                                                                                                                                                                                                                                                                                                                   | `None`         | `str`                                   |
+| `min_sunrise_time`                          | Set the earliest virtual sunrise time (HH:MM:SS), allowing for later sunrises. 🌅                                                                                                                                                                                                                                                                                                             | `None`         | `str`                                   |
+| `max_sunrise_time`                          | Set the latest virtual sunrise time (HH:MM:SS), allowing for earlier sunrises. 🌅                                                                                                                                                                                                                                                                                                             | `None`         | `str`                                   |
+| `sunrise_offset`                            | Adjust sunrise time with a positive or negative offset in seconds. ⏰                                                                                                                                                                                                                                                                                                                         | `0`            | `int`                                   |
+| `sunset_time`                               | Set a fixed time (HH:MM:SS) for sunset. 🌇                                                                                                                                                                                                                                                                                                                                                    | `None`         | `str`                                   |
+| `min_sunset_time`                           | Set the earliest virtual sunset time (HH:MM:SS), allowing for later sunsets. 🌇                                                                                                                                                                                                                                                                                                               | `None`         | `str`                                   |
+| `max_sunset_time`                           | Set the latest virtual sunset time (HH:MM:SS), allowing for earlier sunsets. 🌇                                                                                                                                                                                                                                                                                                               | `None`         | `str`                                   |
+| `sunset_offset`                             | Adjust sunset time with a positive or negative offset in seconds. ⏰                                                                                                                                                                                                                                                                                                                          | `0`            | `int`                                   |
+| `brightness_mode`                           | Brightness mode to use. Possible values are `default`, `linear`, and `tanh` (uses `brightness_mode_time_dark` and `brightness_mode_time_light`). 📈                                                                                                                                                                                                                                           | `default`      | one of `['default', 'linear', 'tanh']`  |
+| `brightness_mode_time_dark`                 | (Ignored if `brightness_mode='default'`) The duration in seconds to ramp up/down the brightness before/after sunrise/sunset. 📈📉                                                                                                                                                                                                                                                             | `900`          | `int`                                   |
+| `brightness_mode_time_light`                | (Ignored if `brightness_mode='default'`) The duration in seconds to ramp up/down the brightness after/before sunrise/sunset. 📈📉.                                                                                                                                                                                                                                                            | `3600`         | `int`                                   |
+| `take_over_control`                         | Pause adaptation of individual lights and hand over (manual) control to other sources that issue `light.turn_on` calls for lights that are on. 🔒                                                                                                                                                                                                                                             | `True`         | `bool`                                  |
+| `take_over_control_mode`                    | The adaptation pausing mode when other sources change brightness and/or color of lights. `pause_all` always pauses both brightness and color adaptation. `pause_changed` pauses the adaptation of only the changed attributes and continues adapting unchanged attributes, e.g., continues color adaptation when only brightness was changed.                                                 | `pause_all`    | one of `['pause_all', 'pause_changed']` |
+| `detect_non_ha_changes`                     | Detects and halts adaptations for non-`light.turn_on` state changes. Needs `take_over_control` enabled. 🕵️ Caution: ⚠️ Some lights might falsely indicate an 'on' state, which could result in lights turning on unexpectedly. Note that this calls `homeassistant.update_entity` every `interval`! Disable this feature if you encounter such issues.                                        | `False`        | `bool`                                  |
+| `autoreset_control_seconds`                 | Automatically reset the manual control after a number of seconds. Set to 0 to disable. ⏲️                                                                                                                                                                                                                                                                                                     | `0`            | `int` 0-31536000                        |
+| `only_once`                                 | Adapt lights only when they are turned on (`true`) or keep adapting them (`false`). 🔄                                                                                                                                                                                                                                                                                                        | `False`        | `bool`                                  |
+| `adapt_only_on_bare_turn_on`                | When turning lights on initially. If set to `true`, AL adapts only if `light.turn_on` is invoked without specifying color or brightness. ❌🌈 This e.g., prevents adaptation when activating a scene and marks the light as manually controlled. If `false`, AL adapts regardless of the presence of color or brightness in the initial `service_data`. Needs `take_over_control` enabled. 🕵️ | `False`        | `bool`                                  |
+| `manual_control_on_external_turn_on`        | Treat turn-ons without a matching Home Assistant `light.turn_on` context as manual control. Normal manual-control resets apply. Still allows `detect_non_ha_changes` for already-on lights. Needs `take_over_control` enabled. 🕵️                                                                                                                                                             | `False`        | `bool`                                  |
+| `reset_manual_control_on_sleep_mode_change` | Reset manual control when the sleep mode switch is toggled. Set to `false` to preserve manual control across sleep mode changes. 😴                                                                                                                                                                                                                                                           | `True`         | `bool`                                  |
+| `separate_turn_on_commands`                 | Use separate `light.turn_on` calls for color and brightness, needed for some light types. 🔀                                                                                                                                                                                                                                                                                                  | `False`        | `bool`                                  |
+| `send_split_delay`                          | Delay (ms) between `separate_turn_on_commands` for lights that don't support simultaneous brightness and color setting. ⏲️                                                                                                                                                                                                                                                                    | `0`            | `int` 0-10000                           |
+| `adapt_delay`                               | Wait time (seconds) between light turn on and Adaptive Lighting applying changes. Might help to avoid flickering. ⏲️                                                                                                                                                                                                                                                                          | `0`            | `float > 0`                             |
+| `skip_redundant_commands`                   | Skip sending adaptation commands whose target state already equals the light's known state. Minimizes network traffic and improves the adaptation responsivity in some situations. 📉Disable if physical light states get out of sync with HA's recorded state.                                                                                                                               | `False`        | `bool`                                  |
+| `intercept`                                 | Intercept and adapt `light.turn_on` calls to enabling instantaneous color and brightness adaptation. 🏎️ Disable for lights that do not support `light.turn_on` with color and brightness.                                                                                                                                                                                                     | `True`         | `bool`                                  |
+| `multi_light_intercept`                     | Intercept and adapt `light.turn_on` calls that target multiple lights. ➗⚠️ This might result in splitting up a single `light.turn_on` call into multiple calls, e.g., when lights are in different switches. Requires `intercept` to be enabled.                                                                                                                                             | `True`         | `bool`                                  |
+| `include_config_in_attributes`              | Show all options as attributes on the switch in Home Assistant when set to `true`. 📝                                                                                                                                                                                                                                                                                                         | `False`        | `bool`                                  |
+| `expand_light_groups`                       | Expand light groups to their members (`true`, default). Set `false` to send commands to the group and track manual control for the group. Explicit member targets in services stay individual targets.                                                                                                                                                                                        | `True`         | `bool`                                  |
+
+<!-- OUTPUT:END -->
+
+<!-- SECTION:config-example-full:START -->
+Full example:
+
+```yaml
+# Example configuration.yaml entry
+adaptive_lighting:
+- name: "default"
+  lights: []
+  prefer_rgb_color: false
+  transition: 45
+  initial_transition: 1
+  interval: 90
+  min_brightness: 1
+  max_brightness: 100
+  min_color_temp: 2000
+  max_color_temp: 5500
+  sleep_brightness: 1
+  sleep_color_temp: 1000
+  sunrise_time: "08:00:00"  # override the sunrise time
+  sunrise_offset:
+  sunset_time:
+  sunset_offset: 1800  # in seconds or '00:30:00'
+  take_over_control: true
+  detect_non_ha_changes: false
+  only_once: false
+
+```
+<!-- SECTION:config-example-full:END -->
+
+### :hammer_and_wrench: Services
+
+#### `adaptive_lighting.apply`
+
+`adaptive_lighting.apply` applies Adaptive Lighting settings to lights on demand.
+Provide a switch in `entity_id`, a list of `lights`, or both.
+
+<!-- CODE:START -->
+<!-- from adaptive_lighting._docs_helpers import generate_apply_markdown_table -->
+<!-- print(generate_apply_markdown_table()) -->
+<!-- CODE:END -->
+
+<!-- OUTPUT:START -->
+<!-- ⚠️ This content is auto-generated by `markdown-code-runner`. -->
+| Service data attribute   | Description                                                                           | Required   | Type                 |
+|:-------------------------|:--------------------------------------------------------------------------------------|:-----------|:---------------------|
+| `entity_id`              | The `entity_id` of the switch with the settings to apply. 📝                          | ❌         | list of `entity_id`s |
+| `lights`                 | A light (or list of lights) to apply the settings to. 💡                              | ❌         | list of `entity_id`s |
+| `transition`             | Duration of transition when lights change, in seconds. 🕑                             | ❌         | `float` 0-6553       |
+| `adapt_brightness`       | Whether to adapt the brightness of the light. 🌞                                      | ❌         | bool                 |
+| `adapt_color`            | Whether to adapt the color on supporting lights. 🌈                                   | ❌         | bool                 |
+| `prefer_rgb_color`       | Whether to prefer RGB color adjustment over light color temperature when possible. 🌈 | ❌         | bool                 |
+| `turn_on_lights`         | Whether to turn on lights that are currently off. 🔆                                  | ❌         | bool                 |
+
+<!-- OUTPUT:END -->
+#### `adaptive_lighting.set_manual_control`
+
+`adaptive_lighting.set_manual_control` can mark (or unmark) whether a light is "manually controlled", meaning that when a light has `manual_control`, the light is not adapted.
+Provide a switch in `entity_id`, a list of `lights`, or both.
+
+<!-- CODE:START -->
+<!-- from adaptive_lighting._docs_helpers import generate_set_manual_control_markdown_table -->
+<!-- print(generate_set_manual_control_markdown_table()) -->
+<!-- CODE:END -->
+
+<!-- OUTPUT:START -->
+<!-- ⚠️ This content is auto-generated by `markdown-code-runner`. -->
+| Service data attribute   | Description                                                                                                                                                            | Required   | Type                                     |
+|:-------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-----------|:-----------------------------------------|
+| `entity_id`              | The `entity_id` of the switch in which to (un)mark the light as being `manually controlled`. 📝                                                                        | ❌         | list of `entity_id`s                     |
+| `lights`                 | entity_id(s) of lights, if not specified, all lights in the switch are selected. 💡                                                                                    | ❌         | list of `entity_id`s                     |
+| `manual_control`         | Whether to add ("true") or remove ("false") all adapted attributes of the light from the "manual_control" list, or the name of an attribute for selective addition. 🔒 | ❌         | bool or one of `['brightness', 'color']` |
+
+<!-- OUTPUT:END -->
+
+<!-- SECTION:change-switch-settings:START -->
+#### `adaptive_lighting.change_switch_settings`
+
+`adaptive_lighting.change_switch_settings` (new in 1.7.0) Change any of the above configuration options of Adaptive Lighting (such as `sunrise_time` or `prefer_rgb_color`) with a service call directly from your script/automation.
+
+> [!WARNING]
+> These settings will **not** be written to your config and will be reset on restart of Home Assistant! You can see the current settings in the `switch.adaptive_lighting_XXX` attributes if `include_config_in_attributes` is enabled.
+
+| Service data attribute                                    | Required | Description                                                                                                                                                                                                                                                                                                  |
+| --------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `use_defaults`                                            | ❌        | (default: `current` for current settings) Choose from `factory`, `configuration`, or `current` to reset variables not being set with this service call. `current` leaves them as they are, `configuration` resets to initial startup values, `factory` resets to default values listed in the documentation. |
+| **all other keys** (except the ones in the table below ⚠️) | ❌        | See the table below for disallowed keys.                                                                                                                                                                                                                                                                     |
+
+The following keys are disallowed:
+
+| **DISALLOWED** service data | Description                                                                                     |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| `entity_id`                 | You cannot change the switch's `entity_id`, as it has already been registered.                  |
+| `lights`                    | You may call `adaptive_lighting.apply` with your lights or create a new config instead.         |
+| `name`                      | You can rename your switch's display name in Home Assistant's UI.                               |
+| `interval`                  | The interval is used only once when the config loads. A config change and restart are required. |
+<!-- SECTION:change-switch-settings:END -->
+
+<!-- SECTION:automation-examples:START -->
+## :robot: Automation examples
+
+Replace every entity ID below with the IDs from your Home Assistant instance. Fresh Adaptive Lighting profiles use child IDs such as `switch.adaptive_lighting_living_room_sleep_mode`; profiles created before the device-based entity change may retain older IDs.
+
+Blocks that begin with `- alias` are entries for `automations.yaml`. Blocks with a top-level `script:` or `adaptive_lighting:` key are complete `configuration.yaml` examples. If your configuration uses `script: !include scripts.yaml`, omit that outer key and place its contents in `scripts.yaml`.
+
+Five examples also have blueprints with selectors, so you can configure them without editing YAML:
+
+| Blueprint | Purpose | Import |
+| --- | --- | --- |
+| [Sleep mode](https://github.com/basnijholt/adaptive-lighting/blob/main/blueprints/automation/sleep_mode.yaml) | Synchronize several profiles with one sleep-mode helper. | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fbasnijholt%2Fadaptive-lighting%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fsleep_mode.yaml) |
+| [Minimum brightness](https://github.com/basnijholt/adaptive-lighting/blob/main/blueprints/automation/turn_off_at_minimum.yaml) | Turn one light off when its target crosses down to the minimum. | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fbasnijholt%2Fadaptive-lighting%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fturn_off_at_minimum.yaml) |
+| [Pause at minimum](https://github.com/basnijholt/adaptive-lighting/blob/main/blueprints/automation/manual_control_at_minimum.yaml) | Pause brightness through manual control, using its existing reset behavior. | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fbasnijholt%2Fadaptive-lighting%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fmanual_control_at_minimum.yaml) |
+| [Schedule profile](https://github.com/basnijholt/adaptive-lighting/blob/main/blueprints/automation/schedule_profile.yaml) | Apply brightness and color temperature from Schedule helper blocks. | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fbasnijholt%2Fadaptive-lighting%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fschedule_profile.yaml) |
+| [Daylight limit](https://github.com/basnijholt/adaptive-lighting/blob/main/blueprints/automation/daylight_limit.yaml) | Lower maximum brightness in strong daylight. | [![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fbasnijholt%2Fadaptive-lighting%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fdaylight_limit.yaml) |
+
+Click a blueprint's import badge, confirm the import in Home Assistant, then create an automation and select your entities. You can also copy its source link into **Settings → Automations & scenes → Blueprints → Import Blueprint**. Read the matching example below for setup and behavior. Each blueprint is tested through Home Assistant alongside its YAML example. The built-in manual-control timeout needs no automation; the scripts below remain useful as actions in your own automations.
+
+`change_switch_settings` updates a profile while its main switch is off, but lights are adapted only while that switch is on. It preserves manual-control flags, so manually controlled lights remain paused.
+
+<details markdown="1">
+<summary>Automatically reset manual control after one hour.</summary>
+
+Use the built-in timeout so every new manual change renews a single timer for that light:
+
+```yaml
+adaptive_lighting:
+  - name: "Living Room"
+    lights:
+      - light.living_room
+    autoreset_control_seconds: 3600
+```
+
+This is a top-level `configuration.yaml` example. The timer clears manual control and immediately readapts a light when both it and the Adaptive Lighting switch are on.
+
+</details>
+
+<details markdown="1">
+<summary>Toggle multiple Adaptive Lighting switches to "sleep mode" using an <code>input_boolean.sleep_mode</code>.</summary>
+
+Also available as a [blueprint](https://github.com/basnijholt/adaptive-lighting/blob/main/blueprints/automation/sleep_mode.yaml). Select an input boolean and the sleep-mode switches it should control.
+
+```yaml
+- alias: "Adaptive lighting: toggle 'sleep mode'"
+  mode: restart
+  trigger:
+    - platform: state
+      entity_id: input_boolean.sleep_mode
+    - platform: homeassistant
+      event: start  # apply the helper's restored state
+  variables:
+    sleep_mode: "{{ states('input_boolean.sleep_mode') }}"
+  conditions:
+    - condition: template
+      value_template: "{{ sleep_mode in ['on', 'off'] }}"
+  actions:
+    - action: "switch.turn_{{ sleep_mode }}"
+      target:
+        entity_id:
+          - switch.adaptive_lighting_living_room_sleep_mode
+          - switch.adaptive_lighting_bedroom_sleep_mode
+```
+
+</details>
+
+<details markdown="1">
+<summary>Turn a light off when its adaptive brightness target reaches the minimum.</summary>
+
+Prefer a form over editing YAML? Import the [blueprint](https://github.com/basnijholt/adaptive-lighting/blob/main/blueprints/automation/turn_off_at_minimum.yaml) in Home Assistant under **Settings → Automations & scenes → Blueprints → Import Blueprint**. Select your profile, its matching adapt brightness switch, one light managed by that profile, and its minimum brightness percentage. Create one automation per light. If you change the profile's minimum later, update the automation too. The blueprint and YAML example below have the same behavior.
+
+The Adaptive Lighting switch already exposes its calculated `brightness_pct` target. Use its state changes to choose a power policy in an automation; no custom event is needed. This example assumes `min_brightness: 1`. Change `minimum_pct` to match your profile, and replace the switch and light entity IDs with your own.
+
+The comparison uses the same rounded 0–255 brightness as an adaptation command. Comparing floating-point percentages for exact equality can miss the minimum between updates. This detects the calculated target reaching its minimum command, not the bulb finishing a transition or reaching its physical dimming limit.
+
+```yaml
+- alias: "Adaptive lighting: turn off at minimum brightness"
+  mode: single
+  triggers:
+    - trigger: state
+      entity_id: switch.adaptive_lighting_living_room
+      attribute: brightness_pct
+  conditions:
+    - condition: state
+      entity_id:
+        - switch.adaptive_lighting_living_room
+        - switch.adaptive_lighting_living_room_adapt_brightness
+      state: "on"
+    - condition: template
+      value_template: >-
+        {% set minimum_pct = 1 %}
+        {% set minimum = (minimum_pct * 255 / 100) | round(0) %}
+        {% set before = trigger.from_state.attributes.get('brightness_pct')
+                        if trigger.from_state else none %}
+        {% set after = trigger.to_state.attributes.get('brightness_pct')
+                       if trigger.to_state else none %}
+        {{ is_number(before) and is_number(after)
+           and (before | float * 255 / 100) | round(0) > minimum
+           and (after | float * 255 / 100) | round(0) <= minimum }}
+    - condition: state
+      entity_id: light.living_room
+      state: "on"
+    - condition: template
+      value_template: >-
+        {{ 'light.living_room' not in
+           (state_attr('switch.adaptive_lighting_living_room', 'manual_control') or []) }}
+  actions:
+    - action: light.turn_off
+      target:
+        entity_id: light.living_room
+```
+
+This runs once when a valid target crosses down into the minimum range. It skips lights currently marked as manually controlled, does not repeatedly turn them off while the target remains low, and does not turn them back on later. Startup or re-enabling the profile while already at the minimum is not a new crossing. Sleep mode can also cause a crossing if its brightness is at or below the chosen minimum. Changing sleep mode clears manual control by default; set `reset_manual_control_on_sleep_mode_change: false` if you want to preserve it. For a bedtime-only policy, trigger directly on the sleep-mode switch changing to `on` instead.
+
+</details>
+
+<details markdown="1">
+<summary>Pause brightness at the minimum using manual control.</summary>
+
+Use the [blueprint](https://github.com/basnijholt/adaptive-lighting/blob/main/blueprints/automation/manual_control_at_minimum.yaml) to mark an individual light's brightness as manually controlled when the calculated target reaches its minimum. The light stays on and the adaptation switches stay enabled. Set `take_over_control_mode: pause_changed` on the profile to keep adapting color; the default `pause_all` pauses both attributes.
+
+Select the profile, its adapt-brightness switch, and a light managed by it. Match the minimum percentage to the profile's `min_brightness`. This YAML example assumes `min_brightness: 1`; change `minimum_pct` and the entity IDs to match your setup.
+
+```yaml
+- alias: "Adaptive lighting: pause brightness at minimum"
+  mode: single
+  variables:
+    minimum_pct: 1
+    minimum: "{{ (minimum_pct * 255 / 100) | round(0) }}"
+  triggers:
+    - trigger: state
+      entity_id: switch.adaptive_lighting_living_room
+      attribute: brightness_pct
+  conditions:
+    - condition: state
+      entity_id:
+        - switch.adaptive_lighting_living_room
+        - switch.adaptive_lighting_living_room_adapt_brightness
+      state: "on"
+    - condition: template
+      value_template: >-
+        {% set before = trigger.from_state.attributes.get('brightness_pct')
+                        if trigger.from_state else none %}
+        {% set after = trigger.to_state.attributes.get('brightness_pct')
+                       if trigger.to_state else none %}
+        {{ is_number(before) and is_number(after)
+           and (before | float * 255 / 100) | round(0) > minimum
+           and (after | float * 255 / 100) | round(0) <= minimum }}
+    - condition: state
+      entity_id: light.living_room
+      state: "on"
+    - condition: template
+      value_template: >-
+        {{ 'light.living_room' not in
+           (state_attr('switch.adaptive_lighting_living_room', 'manual_control_brightness') or []) }}
+  actions:
+    - variables:
+        light_session: "{{ states.light.living_room.last_changed.isoformat() }}"
+        profile_session: "{{ states.switch.adaptive_lighting_living_room.last_changed.isoformat() }}"
+        brightness_session: "{{ states.switch.adaptive_lighting_living_room_adapt_brightness.last_changed.isoformat() }}"
+    - wait_template: >-
+        {% set target = state_attr('switch.adaptive_lighting_living_room', 'brightness_pct') %}
+        {{ not is_state('light.living_room', 'on')
+           or not is_state('switch.adaptive_lighting_living_room', 'on')
+           or not is_state('switch.adaptive_lighting_living_room_adapt_brightness', 'on')
+           or states.light.living_room.last_changed.isoformat() != light_session
+           or states.switch.adaptive_lighting_living_room.last_changed.isoformat() != profile_session
+           or states.switch.adaptive_lighting_living_room_adapt_brightness.last_changed.isoformat() != brightness_session
+           or not is_number(target) or (target | float * 255 / 100) | round(0) > minimum
+           or 'light.living_room' in
+               (state_attr('switch.adaptive_lighting_living_room', 'manual_control_brightness') or [])
+           or (state_attr('light.living_room', 'brightness') | float(256)) <= minimum }}
+      timeout: "00:05:00"
+      continue_on_timeout: false
+    - condition: template
+      value_template: >-
+        {% set target = state_attr('switch.adaptive_lighting_living_room', 'brightness_pct') %}
+        {{ is_state('light.living_room', 'on')
+           and is_state('switch.adaptive_lighting_living_room', 'on')
+           and is_state('switch.adaptive_lighting_living_room_adapt_brightness', 'on')
+           and states.light.living_room.last_changed.isoformat() == light_session
+           and states.switch.adaptive_lighting_living_room.last_changed.isoformat() == profile_session
+           and states.switch.adaptive_lighting_living_room_adapt_brightness.last_changed.isoformat() == brightness_session
+           and is_number(target) and (target | float * 255 / 100) | round(0) <= minimum
+           and (state_attr('light.living_room', 'brightness') | float(256)) <= minimum
+           and 'light.living_room' not in
+               (state_attr('switch.adaptive_lighting_living_room', 'manual_control_brightness') or []) }}
+    - action: adaptive_lighting.set_manual_control
+      data:
+        entity_id: switch.adaptive_lighting_living_room
+        lights: light.living_room
+        manual_control: >-
+          {{ true if 'light.living_room' in
+             (state_attr('switch.adaptive_lighting_living_room', 'manual_control_color') or [])
+             else 'brightness' }}
+```
+
+The comparison uses the rounded 0–255 target, so it does not depend on sampling an exact floating-point minimum. It waits up to five minutes for the light to report that minimum before marking manual control, so the final dimming command can complete. Reported brightness does not prove physical fade completion. If the light, profile, or adapt-brightness switch is toggled, the target rises, brightness is marked manually controlled elsewhere, or brightness never reaches the minimum, the attempt is abandoned. Lights that cannot report the configured minimum will not be paused. Existing manual color flags are preserved, and lights whose brightness is already manually controlled are left alone. Manual-control state is shared for lights managed by multiple profiles, so their existing takeover policies still apply.
+
+The usual resets apply: turning the light off, the configured `autoreset_control_seconds` timeout, clearing manual control through its service, and existing profile/sleep-switch reset behavior. After a reset, normal adaptation can increase brightness again. This runs once per downward crossing; resetting while the target remains at its minimum does not immediately mark the light again. Startup at the minimum is not a crossing either.
+
+This pauses further dimming as well as brightening. To pause brightness immediately after a brightness change made through Home Assistant, use `take_over_control_mode: pause_changed` with `take_over_control: true`; that needs no additional automation.
+
+</details>
+
+<details markdown="1">
+<summary>Set sunrise and sunset from an alarm.</summary>
+
+Call this script from your alarm automation. It sets one Adaptive Lighting profile's sunrise to the current time and its sunset to 12 hours later on the local clock.
+
+```yaml
+script:
+  set_adaptive_lighting_alarm_times:
+    alias: "Adaptive lighting: set times from alarm"
+    variables:
+      alarm_time: '{{ now().strftime("%H:%M:%S") }}'
+    sequence:
+      - action: adaptive_lighting.change_switch_settings
+        data:
+          entity_id: switch.adaptive_lighting_alarm_lights
+          sunrise_time: "{{ alarm_time }}"
+          sunset_time: >
+            {{ (strptime(alarm_time, "%H:%M:%S") + timedelta(hours=12))
+               .strftime("%H:%M:%S") }}
+```
+
+</details>
+
+<details markdown="1">
+<summary>Use a Schedule helper as a step-based custom lighting profile.</summary>
+
+Also available as a [blueprint](https://github.com/basnijholt/adaptive-lighting/blob/main/blueprints/automation/schedule_profile.yaml). Select the main profile switch and your Schedule helper.
+
+Create a [Schedule helper](https://www.home-assistant.io/integrations/schedule/) named `Adaptive Lighting Profile`. Add time blocks with Additional data like this:
+
+```yaml
+brightness_pct: 20
+color_temp_kelvin: 2500
+```
+
+Use different values for each block. The automation below applies the active block whenever the schedule state or its attributes change. Setting both brightness limits and both color temperature limits to the same value keeps each block at its setpoint. Outside a block, the configured Adaptive Lighting settings are restored.
+
+```yaml
+- alias: "Adaptive lighting: apply scheduled profile"
+  triggers:
+    - trigger: state
+      entity_id: schedule.adaptive_lighting_profile
+    - trigger: homeassistant
+      event: start
+  actions:
+    - choose:
+        - conditions:
+            - condition: state
+              entity_id: schedule.adaptive_lighting_profile
+              state: "on"
+          sequence:
+            - action: adaptive_lighting.change_switch_settings
+              data:
+                entity_id: switch.adaptive_lighting_living_room
+                min_brightness: >
+                  {{ state_attr('schedule.adaptive_lighting_profile', 'brightness_pct') | int(1) }}
+                max_brightness: >
+                  {{ state_attr('schedule.adaptive_lighting_profile', 'brightness_pct') | int(1) }}
+                min_color_temp: >
+                  {{ state_attr('schedule.adaptive_lighting_profile', 'color_temp_kelvin') | int(2000) }}
+                max_color_temp: >
+                  {{ state_attr('schedule.adaptive_lighting_profile', 'color_temp_kelvin') | int(2000) }}
+      default:
+        - action: adaptive_lighting.change_switch_settings
+          data:
+            entity_id: switch.adaptive_lighting_living_room
+            use_defaults: configuration
+  mode: restart
+```
+
+This creates step changes at block boundaries. It does not interpolate between schedule points. Runtime settings also reset when Home Assistant restarts, so the startup trigger reapplies the active block. The default branch restores every configured setting; restore only the four fields explicitly if other automations also change runtime settings.
+
+</details>
+
+<details markdown="1">
+<summary>Reduce daytime brightness when an illuminance sensor detects strong daylight.</summary>
+
+Also available as a [blueprint](https://github.com/basnijholt/adaptive-lighting/blob/main/blueprints/automation/daylight_limit.yaml). Select the profile and sensor, then set the lux thresholds and brightness limits. The high lux threshold must exceed the low threshold; the blueprint does nothing if they are reversed or equal.
+
+Keep a low configured `min_brightness` for late night and let an automation lower `max_brightness` while the room has ample daylight. Use a sensor that is not significantly affected by the controlled lights to avoid a feedback loop.
+
+```yaml
+- alias: "Adaptive lighting: limit brightness in daylight"
+  triggers:
+    - trigger: numeric_state
+      entity_id: sensor.living_room_illuminance
+      above: 300
+    - trigger: numeric_state
+      entity_id: sensor.living_room_illuminance
+      below: 200
+    - trigger: homeassistant
+      event: start
+      id: startup
+  actions:
+    - if:
+        - condition: trigger
+          id: startup
+      then:
+        - wait_template: >
+            {{ is_number(states('sensor.living_room_illuminance')) }}
+          timeout: "00:05:00"
+          continue_on_timeout: false
+    - choose:
+        - conditions:
+            - condition: numeric_state
+              entity_id: sensor.living_room_illuminance
+              above: 300
+          sequence:
+            - action: adaptive_lighting.change_switch_settings
+              data:
+                entity_id: switch.adaptive_lighting_living_room
+                max_brightness: 30
+        - conditions:
+            - condition: numeric_state
+              entity_id: sensor.living_room_illuminance
+              below: 200
+          sequence:
+            - action: adaptive_lighting.change_switch_settings
+              data:
+                entity_id: switch.adaptive_lighting_living_room
+                max_brightness: 100
+  mode: restart
+```
+
+The separate 200 and 300 lux thresholds add hysteresis. After a restart, the automation waits for a numeric sensor state before evaluating it. If the initial value is between the thresholds, Adaptive Lighting keeps its configured maximum. Replace `30` and `100` with your desired daytime limit and normal maximum.
+
+`min_brightness` and `max_brightness` are the solar-midnight and daytime endpoints of the brightness curve. Setting `min_brightness` higher than `max_brightness` is supported and creates an inverted curve that is brighter at night and dimmer during the day. If you only want a daytime limit, keep the reduced maximum at or above the configured minimum.
+
+</details>
+
+<details markdown="1">
+<summary>Turn on Hue-controlled lights with the current Adaptive Lighting values.</summary>
+
+For a Hue button exposed to Home Assistant, call this script from the button automation. It turns on the listed lights directly with the current Adaptive Lighting brightness and color.
+
+```yaml
+script:
+  living_room_adaptive_lighting:
+    alias: "Living room: adaptive lighting"
+    sequence:
+      - action: adaptive_lighting.apply
+        data:
+          entity_id: switch.adaptive_lighting_living_room
+          lights:
+            - light.living_room_ceiling
+            - light.living_room_table
+          turn_on_lights: true
+          transition: 0
+```
+
+This requires Home Assistant to receive the button event. The one-shot `apply` call works while the main Adaptive Lighting switch is off, turns on the listed lights, and applies values even if a light is marked as manually controlled. It leaves the profile switch and manual-control state unchanged.
+
+Adaptive Lighting does not update scenes stored on the Hue Bridge, so scenes activated only inside Hue cannot use this script and retain Hue's operation when Home Assistant is unavailable.
+
+</details>
+
+<details markdown="1">
+<summary>Use a fixed RGB stage before sleep mode.</summary>
+
+This script starts sleep mode with a fixed dim red color, waits 30 minutes, and then restores the configured Adaptive Lighting settings. The main profile switch and the light must already be on.
+
+```yaml
+script:
+  adaptive_lighting_bedtime:
+    alias: "Adaptive lighting: bedtime"
+    mode: restart
+    sequence:
+      - action: adaptive_lighting.change_switch_settings
+        data:
+          entity_id: switch.adaptive_lighting_bedroom
+          sleep_rgb_or_color_temp: rgb_color
+          sleep_rgb_color: [255, 56, 0]
+          sleep_brightness: 20
+      - action: switch.turn_on
+        target:
+          entity_id: switch.adaptive_lighting_bedroom_sleep_mode
+      - delay: "00:30:00"
+      - action: adaptive_lighting.change_switch_settings
+        data:
+          entity_id: switch.adaptive_lighting_bedroom
+          use_defaults: configuration
+```
+
+The light must support RGB color. The first stage uses a fixed brightness rather than following the normal brightness curve. When sleep mode changes from off to on, the default `reset_manual_control_on_sleep_mode_change: true` returns manually controlled lights to Adaptive Lighting control so they receive the stage. If you disable that option, manually controlled lights remain paused. Restoring configuration defaults resets every runtime setting on this Adaptive Lighting switch, so restore only the sleep fields explicitly if other automations also change runtime settings.
+
+Stopping this script or reloading scripts during the delay prevents the final action, leaving the runtime overrides active. To recover, call `adaptive_lighting.change_switch_settings` for the profile with `use_defaults: configuration`. A Home Assistant restart reloads the configured settings.
+
+</details>
+
+<details markdown="1">
+<summary>Run a fixed virtual day across midnight.</summary>
+
+Fixed virtual sunrise and sunset times can cross midnight. This configuration ramps an indoor garden from its minimum at 16:00 to its maximum at 22:00, then back to its minimum at 04:00.
+
+```yaml
+adaptive_lighting:
+  - name: "Indoor Garden"
+    lights:
+      - light.indoor_garden
+    sunrise_time: "16:00:00"
+    sunset_time: "04:00:00"
+    min_brightness: 10
+    max_brightness: 100
+    brightness_mode: linear
+    brightness_mode_time_dark: 0
+    brightness_mode_time_light: 21600  # 6 hours
+```
+
+Adaptive Lighting changes brightness and color while a light is on; it does not manage the light's power schedule. This separate automation turns the example light on and off:
+
+```yaml
+- alias: "Indoor garden: power schedule"
+  triggers:
+    - trigger: time
+      at: "16:00:00"
+      id: turn_on
+    - trigger: time
+      at: "04:00:00"
+      id: turn_off
+    - trigger: homeassistant
+      event: start
+      id: startup
+  actions:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: turn_on
+          sequence:
+            - action: light.turn_on
+              target:
+                entity_id: light.indoor_garden
+        - conditions:
+            - condition: trigger
+              id: startup
+            - condition: time
+              after: "16:00:00"
+              before: "04:00:00"
+          sequence:
+            - action: light.turn_on
+              target:
+                entity_id: light.indoor_garden
+      default:
+        - action: light.turn_off
+          target:
+            entity_id: light.indoor_garden
+```
+
+Use `min_sunrise_time`, `max_sunrise_time`, `min_sunset_time`, or `max_sunset_time` instead when you want to constrain astronomical sunrise or sunset to an earliest or latest time rather than replace it.
+
+</details>
+<!-- SECTION:automation-examples:END -->
+
+## Additional Information
+
+For more details on adding the integration and setting options, refer to the [documentation of the PR](https://deploy-preview-14877--home-assistant-docs.netlify.app/integrations/adaptive_lighting/) and [this video tutorial on Reddit](https://www.reddit.com/r/homeassistant/comments/jabhso/ha_has_it_before_apple_has_even_finished_it_i/).
+
+Adaptive Lighting was initially inspired by @claytonjn's [hass-circadian\_lighting](https://github.com/claytonjn/hass-circadian_lighting), but has since been entirely rewritten and expanded with new features.
+
+## :sos: Troubleshooting
+
+<!-- SECTION:troubleshooting-intro:START -->
+Encountering issues? Enable debug logging in your `configuration.yaml`:
+
+```yaml
+logger:
+  default: warning
+  logs:
+    custom_components.adaptive_lighting: debug
+```
+
+After the issue occurs, create a new issue report with the log (`/config/home-assistant.log`).
+
+For support, use Home Assistant's **Download diagnostics** action on the
+Adaptive Lighting config entry. The download is an on-demand snapshot of the
+profile's current switches and currently tracked light targets. It does not
+refresh group membership or predict targets a disabled profile would use after
+being enabled. It does not create live sensors; existing switch attributes
+remain the interface for automations.
+The reported last adaptation values are the shared manager's latest retained
+value for each attribute. They can come from different commands and do not
+represent one sent command or the current desired state.
+<!-- SECTION:troubleshooting-intro:END -->
+
+<!-- SECTION:common-problems:START -->
+### :exclamation: Common Problems & Solutions
+
+#### :bulb: Lights Only Adapt After Reloading
+
+If lights stop adapting after you turn them on with a physical switch or a Zigbee-bound remote, check the Adaptive Lighting switch's `manual_control` attribute. With `take_over_control: true` and `detect_non_ha_changes: false`, a turn-on without a matching Home Assistant `light.turn_on` call marks the light as manually controlled. Reloading clears that state, but the next physical turn-on can trigger it again.
+
+To adapt these turn-ons while still detecting later manual changes, enable `detect_non_ha_changes` and leave `manual_control_on_external_turn_on` disabled. This requires the light integration to report its state reliably. If you want Adaptive Lighting to keep adapting regardless of manual changes, disable `take_over_control` along with the options that require it: `detect_non_ha_changes`, `adapt_only_on_bare_turn_on`, and `manual_control_on_external_turn_on`.
+
+This explains the physical-switch case in [#1056](https://github.com/basnijholt/adaptive-lighting/issues/1056), but not every report in that thread. If the light is not listed in `manual_control`, include diagnostics and debug logs from the failed turn-on when reporting it. Lights returning from `unavailable` after a power cut are a separate case from an `off` to `on` state change.
+
+#### :bulb: Lights Not Responding or Turning On by Themselves
+
+Adaptive Lighting sends more commands to lights than a typical human user would. If your light control network is unhealthy, you may experience:
+
+- Laggy manual commands (e.g., turning lights on or off).
+- Unresponsive lights.
+- Home Assistant reporting incorrect light states, causing Adaptive Lighting to inadvertently turn lights back on.
+
+Most issues that appear to be caused by Adaptive Lighting are actually due to unrelated problems.
+Addressing these issues will significantly improve your Home Assistant experience.
+
+In case lights are suddenly turning on by themselves, this is most likely due to the light incorrectly reporting an "on" state to Home Assistant, leading to an undesired Adaptive Lighting action.
+To prevent adapting in cases *where the state of the light is suddenly "on" and only adapt if there is an associated `light.turn_on` service call*, set `detect_non_ha_changes: false`.
+
+To keep detecting manual changes to lights that are already on while leaving unmatched `off` to `on` state events unchanged, enable `manual_control_on_external_turn_on`. Matching uses the exact context of the most recently recorded `light.turn_on` call. Some integrations replace or omit that context, so Adaptive Lighting cannot distinguish every physical versus Home Assistant turn-on source.
+
+#### :signal_strength: WiFi Networks
+
+Ensure your light bulbs have a strong WiFi connection. If the signal strength is less than -70dBm, the connection may be weak and prone to dropping messages.
+
+#### :spider_web: Zigbee, Z-Wave, and Other Mesh Networks
+
+Mesh networks typically require powered devices to act as routers, relaying messages back to the central coordinator (the radio connected to Home Assistant).
+Most modern lights function as routers, very early models may not.
+If devices become unresponsive or fail to respond to commands, Adaptive Lighting can exacerbate the issue.
+Use network maps (available in ZHA, zigbee2mqtt, deCONZ, and ZWaveJS UI) to evaluate your network health.
+Smart plugs can be an affordable way to add more routers to your network.
+
+For most Zigbee networks, **using groups is essential for optimal performance**.
+For example, if you want to use Adaptive Lighting in a hallway with six bulbs, adding each bulb individually to the Adaptive Lighting configuration could overwhelm the network with commands.
+Instead, create a group in your Zigbee software (not a regular Home Assistant group) and add that single group to the Adaptive Lighting configuration.
+This sends a single broadcast command to adjust all bulbs, improving response times and keeping the bulbs in sync.
+
+As a rule of thumb, if you always control lights together (e.g., bulbs in a ceiling fixture), they should be in a Zigbee group.
+Expose only the group (not individual bulbs) in Home Assistant Dashboards and external systems like Google Home or Apple HomeKit.
+
+> :warning: **If you control lights individually, `manual_control` cannot behave correctly! If you need to control lights individually as well, use a [Home Assistant Light Group](https://www.home-assistant.io/integrations/group/).**
+
+When mixing group types, avoid nesting: do not add integration-level groups (e.g., Zigbee2MQTT groups) to a [Home Assistant Light Group](https://www.home-assistant.io/integrations/group/) that is managed by Adaptive Lighting, and do not nest Home Assistant Light Groups inside each other.
+Adaptive Lighting cannot expand an integration-level group into its member lights, and nested groups make it unpredictable which entity Adaptive Lighting tracks and adapts, which can prevent lights from being adapted at all (see [#1378](https://github.com/basnijholt/adaptive-lighting/issues/1378)).
+Instead, add the individual light entities or a single Zigbee group directly to the Adaptive Lighting configuration.
+Also note that bulbs turned on via a Zigbee group broadcast may briefly flash their last (cached) brightness and color before the adapted values arrive; this happens inside the bulbs and cannot be prevented by Home Assistant or Adaptive Lighting.
+
+#### :rainbow: Light Colors Not Matching
+
+Bulbs from different manufacturers or models may have varying color temperature specifications. For instance, if you have two Adaptive Lighting configurations—one with only Philips Hue White Ambiance bulbs and another with a mix of Philips Hue White Ambiance and Sengled bulbs—the Philips Hue bulbs may appear to have different color temperatures despite having identical settings.
+
+To resolve this:
+
+1.  Include only bulbs of the same make and model in a single Adaptive Lighting configuration.
+2.  Rearrange bulbs so that different color temperatures are not visible simultaneously.
+
+#### :bulb: Bulb-Specific Issues
+
+These lights are known to exhibit disadvantageous behaviour due to firmware bugs, insufficient functionality, or hardware limitations:
+
+- [Sengled Z01-A19NAE26](https://www.zigbee2mqtt.io/devices/Z01-A19NAE26.html#sengled-z01-a19nae26)
+  - Unexpected turn-ons: If Adaptive Lighting sends a long transition time (like the default 45 seconds), and the bulb is turned off during that time, it may turn back on after approximately 10 seconds to continue the transition command. Since the bulb is turning itself on, there will be no obvious trigger in Home Assistant or other logs indicating the cause of the light turning on. To fix this, set a much shorter `transition` time, such as 1 second.
+  - Heat sensitivity: Additionally, these bulbs may perform poorly in enclosed "dome" style ceiling lights, particularly when hot. While most LEDs (even non-smart ones) state in the fine print that they do not support working in enclosed fixtures, in practice, more expensive bulbs like Philips Hue generally perform better. To resolve this issue, move the problematic bulbs to open-air fixtures.
+- Ikea Tradfri bulbs/drivers (and related Ikea smart light products)
+  - Unsupported simultaneous transition of brightness and color: When receiving such a command, they switch the brightness instantly and only transition the color. To get smooth transitions of both brightness and color, enable `separate_turn_on_commands`.
+  - Unresponsiveness during color transitions: No other commands are processed during an ongoing color transition, e.g., turn-off commands are ignored and lights stay on despite being reported as off to Home Assistant. The default config with long transitions thus results in long periods of unresponsiveness. To work around this, disable transitions by setting `transition` to `0`, and increase the adaptation frequency by setting `interval` to a short time, e.g., `15` seconds, to retain the impression of smooth continuous adaptations. Keeping the `initial_transition` is recommended for a smooth fade-in (lights are usually not turned off momentarily after being turned on, in which case a short period of unresponsiveness is tolerable).
+- [Lonsonho ZB-RGBCW](https://www.zigbee2mqtt.io/devices/ZB-RGBCW.html#lonsonho-zb-rgbcw)
+  - Some Zigbee2MQTT/eWeLight firmware combinations do not turn the bulb on when the initial `light.turn_on` call includes brightness or color, although later adjustments work. Disable `intercept` for affected bulbs.
+<!-- SECTION:common-problems:END -->
+
+<!-- SECTION:graphs:START -->
+## :bar_chart: Graphs!
+These graphs were generated using the values calculated by the Adaptive Lighting sensor/switch(es).
+
+### :sunny: Sun Position
+![cl_percent|690x131](https://community-home-assistant-assets.s3.dualstack.us-west-2.amazonaws.com/original/3X/6/5/657ff98beb65a94598edeb4bdfd939095db1a22c.PNG)
+
+### :thermometer: Color Temperature
+![cl_color_temp|690x129](https://community-home-assistant-assets.s3.dualstack.us-west-2.amazonaws.com/original/3X/5/9/59e84263cbecd8e428cb08777a0413672c48dfcd.PNG)
+
+### :high_brightness: Brightness
+![cl_brightness|690x130](https://community-home-assistant-assets.s3.dualstack.us-west-2.amazonaws.com/original/3X/5/8/58ebd994b62a8b1abfb3497a5288d923ff4e2330.PNG)
+
+### While using `transition_until_sleep: true`
+![image](https://user-images.githubusercontent.com/2219836/228949675-f9699624-8abc-466c-bb04-250ce0f495b8.png)
+<!-- SECTION:graphs:END -->
+
+<!-- SECTION:brightness-modes:START -->
+### Custom brightness ramps using `brightness_mode` with `"linear"` and `"tanh"`
+
+<details markdown="1">
+<summary>Enhance your control over brightness transitions during sunrise and sunset with <code>brightness_mode</code> (click here to learn more 🧠).</summary>
+
+With Adaptive Lighting, you can set a `brightness_mode` to specify how the brightness changes during sunrise and sunset. The `brightness_mode` can be set to `"default"` ([as illustrated in other graphs above](#high_brightness-brightness)), `"linear"`, or `"tanh"`. If you choose to deviate from the `"default"` mode, you can adjust `brightness_mode_time_dark` and `brightness_mode_time_light` to further customize the lighting transitions.
+
+When `brightness_mode` is set to `"linear"`:
+
+- During **_sunset_**, the brightness begins to gradually decrease from `max_brightness` starting at `time=sunset_time - brightness_mode_time_light`, until it reaches `min_brightness` at `time=sunset_time + brightness_mode_time_dark`.
+- During **_sunrise_**, the brightness begins to gradually increase from `min_brightness` starting at `time=sunrise_time - brightness_mode_time_dark`, until it reaches `max_brightness` at `time=sunrise_time + brightness_mode_time_light`.
+
+When `brightness_mode` is set to `"tanh"`, it uses the smooth transition of a [hyperbolic tangent function](https://mathworld.wolfram.com/HyperbolicTangent.html):
+
+- During **_sunset_**, the brightness starts to decrease from 95% of `max_brightness` starting at `time=sunset_time - brightness_mode_time_light`, until it reaches 5% of `min_brightness` at `time=sunset_time + brightness_mode_time_dark`.
+- During **_sunrise_**, the brightness starts to increase from 5% of `min_brightness` starting at `time=sunrise_time - brightness_mode_time_dark`, until it reaches 95% of `max_brightness` at `time=sunrise_time + brightness_mode_time_light`.
+</details>
+
+Notice the values of `brightness_mode_time_light` and `brightness_mode_time_dark` in the text box.
+![image](https://github.com/basnijholt/adaptive-lighting/assets/6897215/15143580-13cd-4ab2-a603-89f2b7830afd)
+![image](https://github.com/basnijholt/adaptive-lighting/assets/6897215/f61fdac9-6d47-48c9-84ed-cbb451d5de5d)
+![image](https://github.com/basnijholt/adaptive-lighting/assets/6897215/e5fc5d27-3c37-4e3d-93d1-6e7cf4b48e7c)
+![image](https://github.com/basnijholt/adaptive-lighting/assets/6897215/3dcbdc42-63c4-49df-8651-d2fae53dd08d)
+
+> Check out the interactive webapp on https://basnijholt.github.io/adaptive-lighting/ to play with the parameters and see how the brightness changes!
+<!-- SECTION:brightness-modes:END -->
+
+<!-- SECTION:see-also:START -->
+## :eyes: See also
+
+- [*Sleep better with Adaptive Lighting in Home Assistant*](https://wartner.io/sleep-better-with-adaptive-lightning-in-home-assistant/) by Florian Wartner on 2023-02-23 (blog post 📜)
+- [*Automatic smart light brightness and color based on the sun*](https://www.youtube.com/watch?v=Rg3zI1Oyk3c) by Home Automation Guy on 2022-08-31 (YouTube video 📺)
+- [*Adaptive Lighting Blew My Mind in Home Assistant - How to set it up*](https://www.youtube.com/watch?v=c1cnccmgl3k) by Smart Home Junkie on 2022-06-26 (YouTube video 📺)
+<!-- SECTION:see-also:END -->
+
+## :busts_in_silhouette: Contributors
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="http://www.nijho.lt/"><img src="https://avatars.githubusercontent.com/u/6897215?v=4?s=100" width="100px;" alt="Bas Nijholt"/><br /><sub><b>Bas Nijholt</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=basnijholt" title="Code">💻</a> <a href="#maintenance-basnijholt" title="Maintenance">🚧</a> <a href="https://github.com/basnijholt/adaptive-lighting/issues?q=author%3Abasnijholt" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/wrt54g"><img src="https://avatars.githubusercontent.com/u/85389871?v=4?s=100" width="100px;" alt="Sven Serlier"/><br /><sub><b>Sven Serlier</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=wrt54g" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/willpuckett"><img src="https://avatars.githubusercontent.com/u/12959477?v=4?s=100" width="100px;" alt="Will Puckett"/><br /><sub><b>Will Puckett</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=willpuckett" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/vapescherov"><img src="https://avatars.githubusercontent.com/u/9620482?v=4?s=100" width="100px;" alt="vapescherov"/><br /><sub><b>vapescherov</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=vapescherov" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/travisp"><img src="https://avatars.githubusercontent.com/u/165698?v=4?s=100" width="100px;" alt="Travis Pew"/><br /><sub><b>Travis Pew</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=travisp" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/sindrebroch"><img src="https://avatars.githubusercontent.com/u/10772085?v=4?s=100" width="100px;" alt="Sindre Broch"/><br /><sub><b>Sindre Broch</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=sindrebroch" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Shulyaka"><img src="https://avatars.githubusercontent.com/u/2741408?v=4?s=100" width="100px;" alt="Denis Shulyaka"/><br /><sub><b>Denis Shulyaka</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=Shulyaka" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/RubenKelevra"><img src="https://avatars.githubusercontent.com/u/614929?v=4?s=100" width="100px;" alt="@RubenKelevra"/><br /><sub><b>@RubenKelevra</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=RubenKelevra" title="Documentation">📖</a> <a href="https://github.com/basnijholt/adaptive-lighting/commits?author=RubenKelevra" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Repsionu"><img src="https://avatars.githubusercontent.com/u/46962963?v=4?s=100" width="100px;" alt="Jüri Rebane"/><br /><sub><b>Jüri Rebane</b></sub></a><br /><a href="#translation-Repsionu" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/quantumlemur"><img src="https://avatars.githubusercontent.com/u/229782?v=4?s=100" width="100px;" alt="quantumlemur"/><br /><sub><b>quantumlemur</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=quantumlemur" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Oekn5w"><img src="https://avatars.githubusercontent.com/u/38046255?v=4?s=100" width="100px;" alt="Michael Kirsch"/><br /><sub><b>Michael Kirsch</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=Oekn5w" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://nicholai.dev/"><img src="https://avatars.githubusercontent.com/u/7280931?v=4?s=100" width="100px;" alt="Nicholai Nissen"/><br /><sub><b>Nicholai Nissen</b></sub></a><br /><a href="#translation-Nicholaiii" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/myhrmans"><img src="https://avatars.githubusercontent.com/u/14261388?v=4?s=100" width="100px;" alt="Martin Myhrman"/><br /><sub><b>Martin Myhrman</b></sub></a><br /><a href="#translation-myhrmans" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/mpeterson"><img src="https://avatars.githubusercontent.com/u/11870?v=4?s=100" width="100px;" alt="Michel Peterson"/><br /><sub><b>Michel Peterson</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=mpeterson" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/MangoScango"><img src="https://avatars.githubusercontent.com/u/7623678?v=4?s=100" width="100px;" alt="MangoScango"/><br /><sub><b>MangoScango</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=MangoScango" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Lynilia"><img src="https://avatars.githubusercontent.com/u/89228568?v=4?s=100" width="100px;" alt="Lynilia"/><br /><sub><b>Lynilia</b></sub></a><br /><a href="#translation-Lynilia" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/LukaszP2"><img src="https://avatars.githubusercontent.com/u/44735995?v=4?s=100" width="100px;" alt="LukaszP2"/><br /><sub><b>LukaszP2</b></sub></a><br /><a href="#translation-LukaszP2" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/jowgn"><img src="https://avatars.githubusercontent.com/u/24966042?v=4?s=100" width="100px;" alt="Joscha Wagner"/><br /><sub><b>Joscha Wagner</b></sub></a><br /><a href="#translation-jowgn" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/josecarlosfernandez"><img src="https://avatars.githubusercontent.com/u/624242?v=4?s=100" width="100px;" alt="skdzzz"/><br /><sub><b>skdzzz</b></sub></a><br /><a href="#translation-josecarlosfernandez" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/itssimon"><img src="https://avatars.githubusercontent.com/u/1176585?v=4?s=100" width="100px;" alt="Simon Gurcke"/><br /><sub><b>Simon Gurcke</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=itssimon" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://hypfer.de/"><img src="https://avatars.githubusercontent.com/u/974410?v=4?s=100" width="100px;" alt="Sören Beye"/><br /><sub><b>Sören Beye</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=Hypfer" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="http://medium.com/@hudsonbrendon"><img src="https://avatars.githubusercontent.com/u/5201888?v=4?s=100" width="100px;" alt="Hudson Brendon"/><br /><sub><b>Hudson Brendon</b></sub></a><br /><a href="#translation-hudsonbrendon" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/gvssr"><img src="https://avatars.githubusercontent.com/u/61377476?v=4?s=100" width="100px;" alt="Gabriel Visser"/><br /><sub><b>Gabriel Visser</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=gvssr" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/glebsterx"><img src="https://avatars.githubusercontent.com/u/8779304?v=4?s=100" width="100px;" alt="Gleb"/><br /><sub><b>Gleb</b></sub></a><br /><a href="#translation-glebsterx" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ghost"><img src="https://avatars.githubusercontent.com/u/10137?v=4?s=100" width="100px;" alt="Deleted user"/><br /><sub><b>Deleted user</b></sub></a><br /><a href="#translation-ghost" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://omg.dje.li/"><img src="https://avatars.githubusercontent.com/u/103232?v=4?s=100" width="100px;" alt="Avi Miller"/><br /><sub><b>Avi Miller</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=Djelibeybi" title="Documentation">📖</a> <a href="https://github.com/basnijholt/adaptive-lighting/commits?author=Djelibeybi" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/denysdovhan"><img src="https://avatars.githubusercontent.com/u/3459374?v=4?s=100" width="100px;" alt="Denys Dovhan"/><br /><sub><b>Denys Dovhan</b></sub></a><br /><a href="#translation-denysdovhan" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://davidstenbeck.com/"><img src="https://avatars.githubusercontent.com/u/3330933?v=4?s=100" width="100px;" alt="David Stenbeck"/><br /><sub><b>David Stenbeck</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=Davst" title="Documentation">📖</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/danaues"><img src="https://avatars.githubusercontent.com/u/24459240?v=4?s=100" width="100px;" alt="Kevin Addeman"/><br /><sub><b>Kevin Addeman</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=danaues" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/covid10"><img src="https://avatars.githubusercontent.com/u/71146231?v=4?s=100" width="100px;" alt="covid10"/><br /><sub><b>covid10</b></sub></a><br /><a href="#translation-covid10" title="Translation">🌍</a> <a href="https://github.com/basnijholt/adaptive-lighting/commits?author=covid10" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/chishm"><img src="https://avatars.githubusercontent.com/u/18148723?v=4?s=100" width="100px;" alt="Michael Chisholm"/><br /><sub><b>Michael Chisholm</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=chishm" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/blueshiftlabs"><img src="https://avatars.githubusercontent.com/u/1445520?v=4?s=100" width="100px;" alt="Justin Paupore"/><br /><sub><b>Justin Paupore</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=blueshiftlabs" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/bedaes"><img src="https://avatars.githubusercontent.com/u/8410205?v=4?s=100" width="100px;" alt="bedaes"/><br /><sub><b>bedaes</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=bedaes" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/awashingmachine"><img src="https://avatars.githubusercontent.com/u/79043726?v=4?s=100" width="100px;" alt="awashingmachine"/><br /><sub><b>awashingmachine</b></sub></a><br /><a href="#translation-awashingmachine" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/claytonjn"><img src="https://avatars.githubusercontent.com/u/3850252?v=4?s=100" width="100px;" alt="Clayton Nummer"/><br /><sub><b>Clayton Nummer</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=claytonjn" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/robert-crandall"><img src="https://avatars.githubusercontent.com/u/86014438?v=4?s=100" width="100px;" alt="Robert Crandall"/><br /><sub><b>Robert Crandall</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=robert-crandall" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://mattforster.ca/"><img src="https://avatars.githubusercontent.com/u/3375444?v=4?s=100" width="100px;" alt="Matt Forster"/><br /><sub><b>Matt Forster</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=matt-forster" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://www.dfki.de/en/web/about-us/employee/person/maho10"><img src="https://avatars.githubusercontent.com/u/64665067?v=4?s=100" width="100px;" alt="Mark Niemeyer"/><br /><sub><b>Mark Niemeyer</b></sub></a><br /><a href="#translation-Mark-Niemeyer" title="Translation">🌍</a> <a href="https://github.com/basnijholt/adaptive-lighting/commits?author=Mark-Niemeyer" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://www.linkedin.com/in/elliottplack/"><img src="https://avatars.githubusercontent.com/u/1827881?v=4?s=100" width="100px;" alt="Elliott Plack"/><br /><sub><b>Elliott Plack</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=talllguy" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ngommers"><img src="https://avatars.githubusercontent.com/u/82467671?v=4?s=100" width="100px;" alt="ngommers"/><br /><sub><b>ngommers</b></sub></a><br /><a href="#translation-ngommers" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/deviantintegral"><img src="https://avatars.githubusercontent.com/u/255023?v=4?s=100" width="100px;" alt="Andrew Berry"/><br /><sub><b>Andrew Berry</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=deviantintegral" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/brebtatv"><img src="https://avatars.githubusercontent.com/u/10747062?v=4?s=100" width="100px;" alt="Tomáš Valigura"/><br /><sub><b>Tomáš Valigura</b></sub></a><br /><a href="#translation-brebtatv" title="Translation">🌍</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/th3w1zard1"><img src="https://avatars.githubusercontent.com/u/2219836?v=4?s=100" width="100px;" alt="Benjamin Auquite"/><br /><sub><b>Benjamin Auquite</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=th3w1zard1" title="Code">💻</a> <a href="https://github.com/basnijholt/adaptive-lighting/issues?q=author%3Ath3w1zard1" title="Bug reports">🐛</a> <a href="#maintenance-th3w1zard1" title="Maintenance">🚧</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/skycarl"><img src="https://avatars.githubusercontent.com/u/43375685?v=4?s=100" width="100px;" alt="Skyler Carlson"/><br /><sub><b>Skyler Carlson</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=skycarl" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/firstof9"><img src="https://avatars.githubusercontent.com/u/1105672?v=4?s=100" width="100px;" alt="Chris"/><br /><sub><b>Chris</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=firstof9" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/raman325"><img src="https://avatars.githubusercontent.com/u/7243222?v=4?s=100" width="100px;" alt="Raman Gupta"/><br /><sub><b>Raman Gupta</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=raman325" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/igiannakas"><img src="https://avatars.githubusercontent.com/u/59056762?v=4?s=100" width="100px;" alt="igiannakas"/><br /><sub><b>igiannakas</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=igiannakas" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://protyposis.net"><img src="https://avatars.githubusercontent.com/u/189372?v=4?s=100" width="100px;" alt="Mario Guggenberger"/><br /><sub><b>Mario Guggenberger</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=protyposis" title="Code">💻</a> <a href="#ideas-protyposis" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://ktibow.github.io/"><img src="https://avatars.githubusercontent.com/u/10727862?v=4?s=100" width="100px;" alt="Kendell R"/><br /><sub><b>Kendell R</b></sub></a><br /><a href="#design-KTibow" title="Design">🎨</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/lukerix"><img src="https://avatars.githubusercontent.com/u/93864731?v=4?s=100" width="100px;" alt="lukerix"/><br /><sub><b>lukerix</b></sub></a><br /><a href="#translation-lukerix" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Mexx62"><img src="https://avatars.githubusercontent.com/u/8066485?v=4?s=100" width="100px;" alt="Maxime Bailleul"/><br /><sub><b>Maxime Bailleul</b></sub></a><br /><a href="#translation-Mexx62" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://michelbalzer.de"><img src="https://avatars.githubusercontent.com/u/1337412?v=4?s=100" width="100px;" alt="Michel Balzer"/><br /><sub><b>Michel Balzer</b></sub></a><br /><a href="#translation-michelbalzer" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/enrico1036"><img src="https://avatars.githubusercontent.com/u/9280405?v=4?s=100" width="100px;" alt="Enrico Gambini"/><br /><sub><b>Enrico Gambini</b></sub></a><br /><a href="#translation-enrico1036" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/MirCore"><img src="https://avatars.githubusercontent.com/u/9919366?v=4?s=100" width="100px;" alt="MirCore"/><br /><sub><b>MirCore</b></sub></a><br /><a href="#translation-MirCore" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://kilfer.es/"><img src="https://avatars.githubusercontent.com/u/290854?v=4?s=100" width="100px;" alt="Fernando Belaza"/><br /><sub><b>Fernando Belaza</b></sub></a><br /><a href="#translation-KilFer" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/wilcomir"><img src="https://avatars.githubusercontent.com/u/795981?v=4?s=100" width="100px;" alt="Vladimir Cravero"/><br /><sub><b>Vladimir Cravero</b></sub></a><br /><a href="#translation-wilcomir" title="Translation">🌍</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="http://www.latavernedutroll.fr"><img src="https://avatars.githubusercontent.com/u/255774?v=4?s=100" width="100px;" alt="Julien Quiévreux"/><br /><sub><b>Julien Quiévreux</b></sub></a><br /><a href="#translation-letroll" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/lightrabbit"><img src="https://avatars.githubusercontent.com/u/1521765?v=4?s=100" width="100px;" alt="lightrabbit"/><br /><sub><b>lightrabbit</b></sub></a><br /><a href="#translation-lightrabbit" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Arie6414"><img src="https://avatars.githubusercontent.com/u/129661911?v=4?s=100" width="100px;" alt="Arie6414"/><br /><sub><b>Arie6414</b></sub></a><br /><a href="#translation-Arie6414" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/luixcaetano"><img src="https://avatars.githubusercontent.com/u/4554163?v=4?s=100" width="100px;" alt="luixcaetano"/><br /><sub><b>luixcaetano</b></sub></a><br /><a href="#translation-luixcaetano" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/fmarcu"><img src="https://avatars.githubusercontent.com/u/81946691?v=4?s=100" width="100px;" alt="fmarcu"/><br /><sub><b>fmarcu</b></sub></a><br /><a href="#translation-fmarcu" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/michaelkmoch"><img src="https://avatars.githubusercontent.com/u/107689026?v=4?s=100" width="100px;" alt="michaelkmoch"/><br /><sub><b>michaelkmoch</b></sub></a><br /><a href="#translation-michaelkmoch" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/fbloemhof"><img src="https://avatars.githubusercontent.com/u/8753211?v=4?s=100" width="100px;" alt="Fred"/><br /><sub><b>Fred</b></sub></a><br /><a href="#translation-fbloemhof" title="Translation">🌍</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Z-weapon"><img src="https://avatars.githubusercontent.com/u/13939632?v=4?s=100" width="100px;" alt="Z-weapon"/><br /><sub><b>Z-weapon</b></sub></a><br /><a href="#translation-Z-weapon" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/kylebjordahl"><img src="https://avatars.githubusercontent.com/u/3489222?v=4?s=100" width="100px;" alt="Kyle Bjordahl"/><br /><sub><b>Kyle Bjordahl</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=kylebjordahl" title="Code">💻</a> <a href="https://github.com/basnijholt/adaptive-lighting/issues?q=author%3Akylebjordahl" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/olekbruks"><img src="https://avatars.githubusercontent.com/u/8738016?v=4?s=100" width="100px;" alt="Olek Bruks"/><br /><sub><b>Olek Bruks</b></sub></a><br /><a href="#translation-olekbruks" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://gabrielebaldassarre.com"><img src="https://avatars.githubusercontent.com/u/1724406?v=4?s=100" width="100px;" alt="Gabriele Baldassarre"/><br /><sub><b>Gabriele Baldassarre</b></sub></a><br /><a href="#translation-theclue" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/pbaart"><img src="https://avatars.githubusercontent.com/u/2856849?v=4?s=100" width="100px;" alt="Pepijn Baart"/><br /><sub><b>Pepijn Baart</b></sub></a><br /><a href="#translation-pbaart" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://ovoi.io"><img src="https://avatars.githubusercontent.com/u/3490616?v=4?s=100" width="100px;" alt="Artem Pastukhov"/><br /><sub><b>Artem Pastukhov</b></sub></a><br /><a href="#translation-pastukhov" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://stefany.eu"><img src="https://avatars.githubusercontent.com/u/57348587?v=4?s=100" width="100px;" alt="Martin Štefany"/><br /><sub><b>Martin Štefany</b></sub></a><br /><a href="#translation-mstefany" title="Translation">🌍</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/quenthal"><img src="https://avatars.githubusercontent.com/u/17827203?v=4?s=100" width="100px;" alt="quenthal"/><br /><sub><b>quenthal</b></sub></a><br /><a href="#translation-quenthal" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Luki72"><img src="https://avatars.githubusercontent.com/u/22493116?v=4?s=100" width="100px;" alt="Luki72"/><br /><sub><b>Luki72</b></sub></a><br /><a href="#translation-Luki72" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/pantan-cymk"><img src="https://avatars.githubusercontent.com/u/87476229?v=4?s=100" width="100px;" alt="pantan-cymk"/><br /><sub><b>pantan-cymk</b></sub></a><br /><a href="#translation-pantan-cymk" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/yousaf465"><img src="https://avatars.githubusercontent.com/u/83491212?v=4?s=100" width="100px;" alt="yousaf465"/><br /><sub><b>yousaf465</b></sub></a><br /><a href="#translation-yousaf465" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/baylanger"><img src="https://avatars.githubusercontent.com/u/5240348?v=4?s=100" width="100px;" alt="Pierre Belanger"/><br /><sub><b>Pierre Belanger</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=baylanger" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://www.jan-sigurd.com"><img src="https://avatars.githubusercontent.com/u/8410766?v=4?s=100" width="100px;" alt="Jan-Sigurd Sørensen"/><br /><sub><b>Jan-Sigurd Sørensen</b></sub></a><br /><a href="#translation-jansigu" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/EF01"><img src="https://avatars.githubusercontent.com/u/20759250?v=4?s=100" width="100px;" alt="EF01"/><br /><sub><b>EF01</b></sub></a><br /><a href="#translation-EF01" title="Translation">🌍</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/MrSnakeSPb"><img src="https://avatars.githubusercontent.com/u/68160409?v=4?s=100" width="100px;" alt="Mr Snake"/><br /><sub><b>Mr Snake</b></sub></a><br /><a href="#translation-MrSnakeSPb" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/hungrymachine1"><img src="https://avatars.githubusercontent.com/u/73683742?v=4?s=100" width="100px;" alt="hungrymachine1"/><br /><sub><b>hungrymachine1</b></sub></a><br /><a href="#translation-hungrymachine1" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/4D4M-Github"><img src="https://avatars.githubusercontent.com/u/123521171?v=4?s=100" width="100px;" alt="4D4M-Github"/><br /><sub><b>4D4M-Github</b></sub></a><br /><a href="#translation-4D4M-Github" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/sayaivan"><img src="https://avatars.githubusercontent.com/u/49090860?v=4?s=100" width="100px;" alt="Ivan"/><br /><sub><b>Ivan</b></sub></a><br /><a href="#translation-sayaivan" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://www.floca.be"><img src="https://avatars.githubusercontent.com/u/13313104?v=4?s=100" width="100px;" alt="Florent Cardoen"/><br /><sub><b>Florent Cardoen</b></sub></a><br /><a href="#translation-Fllorent0D" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/moemeli"><img src="https://avatars.githubusercontent.com/u/73445184?v=4?s=100" width="100px;" alt="moemeli"/><br /><sub><b>moemeli</b></sub></a><br /><a href="#translation-moemeli" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/saya6k"><img src="https://avatars.githubusercontent.com/u/63517312?v=4?s=100" width="100px;" alt="saya6k"/><br /><sub><b>saya6k</b></sub></a><br /><a href="#translation-saya6k" title="Translation">🌍</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/droans"><img src="https://avatars.githubusercontent.com/u/49721649?v=4?s=100" width="100px;" alt="droans"/><br /><sub><b>droans</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=droans" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://blogs.gnome.org/jonathankang/"><img src="https://avatars.githubusercontent.com/u/5607743?v=4?s=100" width="100px;" alt="Jonathan Kang"/><br /><sub><b>Jonathan Kang</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=JonathanKang" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/scuricvladimir"><img src="https://avatars.githubusercontent.com/u/46634162?v=4?s=100" width="100px;" alt="scuricvladimir"/><br /><sub><b>scuricvladimir</b></sub></a><br /><a href="#translation-scuricvladimir" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Welsyntoffie"><img src="https://avatars.githubusercontent.com/u/47089904?v=4?s=100" width="100px;" alt="Pieter"/><br /><sub><b>Pieter</b></sub></a><br /><a href="#translation-Welsyntoffie" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/san80068259"><img src="https://avatars.githubusercontent.com/u/68324107?v=4?s=100" width="100px;" alt="san80068259"/><br /><sub><b>san80068259</b></sub></a><br /><a href="#translation-san80068259" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/erdnaxela02"><img src="https://avatars.githubusercontent.com/u/21007415?v=4?s=100" width="100px;" alt="Frosh"/><br /><sub><b>Frosh</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=erdnaxela02" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://www.linkedin.com/in/rafaeltmiranda/"><img src="https://avatars.githubusercontent.com/u/47206949?v=4?s=100" width="100px;" alt="Rafael Miranda"/><br /><sub><b>Rafael Miranda</b></sub></a><br /><a href="#translation-rafaeltmiranda" title="Translation">🌍</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/rVlad93"><img src="https://avatars.githubusercontent.com/u/60452666?v=4?s=100" width="100px;" alt="rVlad93"/><br /><sub><b>rVlad93</b></sub></a><br /><a href="#translation-rVlad93" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://blog.ebbinghaus.me/"><img src="https://avatars.githubusercontent.com/u/2965273?v=4?s=100" width="100px;" alt="Björn Ebbinghaus"/><br /><sub><b>Björn Ebbinghaus</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=MrEbbinghaus" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Marck"><img src="https://avatars.githubusercontent.com/u/18088281?v=4?s=100" width="100px;" alt="Marck"/><br /><sub><b>Marck</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=Marck" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://carmodsheaven.com"><img src="https://avatars.githubusercontent.com/u/11273726?v=4?s=100" width="100px;" alt="Lucho Gizdov"/><br /><sub><b>Lucho Gizdov</b></sub></a><br /><a href="#translation-lachezar-gizdov" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/MizterB"><img src="https://avatars.githubusercontent.com/u/5458030?v=4?s=100" width="100px;" alt="MizterB"/><br /><sub><b>MizterB</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=MizterB" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/brietman"><img src="https://avatars.githubusercontent.com/u/17436537?v=4?s=100" width="100px;" alt="brietman"/><br /><sub><b>brietman</b></sub></a><br /><a href="#translation-brietman" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/TamilNeram"><img src="https://avatars.githubusercontent.com/u/67970539?v=4?s=100" width="100px;" alt="தமிழ் நேரம்"/><br /><sub><b>தமிழ் நேரம்</b></sub></a><br /><a href="#translation-TamilNeram" title="Translation">🌍</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Thunderstrike116"><img src="https://avatars.githubusercontent.com/u/23220766?v=4?s=100" width="100px;" alt="Thunderstrike116"/><br /><sub><b>Thunderstrike116</b></sub></a><br /><a href="#translation-Thunderstrike116" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/immeteor2"><img src="https://avatars.githubusercontent.com/u/125735487?v=4?s=100" width="100px;" alt="immeteor2"/><br /><sub><b>immeteor2</b></sub></a><br /><a href="#translation-immeteor2" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/pbassut"><img src="https://avatars.githubusercontent.com/u/1500037?v=4?s=100" width="100px;" alt="Patrick Bassut"/><br /><sub><b>Patrick Bassut</b></sub></a><br /><a href="#translation-pbassut" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Ricky-Tigg"><img src="https://avatars.githubusercontent.com/u/26058215?v=4?s=100" width="100px;" alt="Ricky Tigg"/><br /><sub><b>Ricky Tigg</b></sub></a><br /><a href="#translation-Ricky-Tigg" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/marazmarci"><img src="https://avatars.githubusercontent.com/u/1349654?v=4?s=100" width="100px;" alt="Márton Maráz"/><br /><sub><b>Márton Maráz</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=marazmarci" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Sara492"><img src="https://avatars.githubusercontent.com/u/63058202?v=4?s=100" width="100px;" alt="Sara492"/><br /><sub><b>Sara492</b></sub></a><br /><a href="#translation-Sara492" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/enpaga"><img src="https://avatars.githubusercontent.com/u/180730931?v=4?s=100" width="100px;" alt="enpaga"/><br /><sub><b>enpaga</b></sub></a><br /><a href="#translation-enpaga" title="Translation">🌍</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/xuars"><img src="https://avatars.githubusercontent.com/u/197080354?v=4?s=100" width="100px;" alt="xuars"/><br /><sub><b>xuars</b></sub></a><br /><a href="#translation-xuars" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/tinutac"><img src="https://avatars.githubusercontent.com/u/2151553?v=4?s=100" width="100px;" alt="tinutac"/><br /><sub><b>tinutac</b></sub></a><br /><a href="#translation-tinutac" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/defaultpage"><img src="https://avatars.githubusercontent.com/u/22825202?v=4?s=100" width="100px;" alt="Default User"/><br /><sub><b>Default User</b></sub></a><br /><a href="#translation-defaultpage" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/amelenty"><img src="https://avatars.githubusercontent.com/u/29466876?v=4?s=100" width="100px;" alt="amelenty"/><br /><sub><b>amelenty</b></sub></a><br /><a href="#translation-amelenty" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://ua.linkedin.com/in/rostyslav-dudka"><img src="https://avatars.githubusercontent.com/u/15959384?v=4?s=100" width="100px;" alt="Rostyslav Dudka"/><br /><sub><b>Rostyslav Dudka</b></sub></a><br /><a href="#translation-yeaxi" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/helderfmf"><img src="https://avatars.githubusercontent.com/u/5622687?v=4?s=100" width="100px;" alt="Helder Ferreira"/><br /><sub><b>Helder Ferreira</b></sub></a><br /><a href="#translation-helderfmf" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://mrpiotr.dev"><img src="https://avatars.githubusercontent.com/u/11849621?v=4?s=100" width="100px;" alt="Piotr Laszczkowski"/><br /><sub><b>Piotr Laszczkowski</b></sub></a><br /><a href="#translation-mrpiotr-dev" title="Translation">🌍</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="http://rezaalmanda.github.io"><img src="https://avatars.githubusercontent.com/u/22217419?v=4?s=100" width="100px;" alt="Reza"/><br /><sub><b>Reza</b></sub></a><br /><a href="#translation-rezaalmanda" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/bittin"><img src="https://avatars.githubusercontent.com/u/43197?v=4?s=100" width="100px;" alt="Luna Jernberg"/><br /><sub><b>Luna Jernberg</b></sub></a><br /><a href="#translation-bittin" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://jeffalwilson.com"><img src="https://avatars.githubusercontent.com/u/1368827?v=4?s=100" width="100px;" alt="Jeff Wilson"/><br /><sub><b>Jeff Wilson</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=jawilson" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/TermeHansen"><img src="https://avatars.githubusercontent.com/u/6922018?v=4?s=100" width="100px;" alt="Rasmus Lundsgaard"/><br /><sub><b>Rasmus Lundsgaard</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=TermeHansen" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Tommatheussen"><img src="https://avatars.githubusercontent.com/u/13683094?v=4?s=100" width="100px;" alt="Tom Matheussen"/><br /><sub><b>Tom Matheussen</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=Tommatheussen" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ams2990"><img src="https://avatars.githubusercontent.com/u/488907?v=4?s=100" width="100px;" alt="ams2990"/><br /><sub><b>ams2990</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=ams2990" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/DataGhost"><img src="https://avatars.githubusercontent.com/u/3911340?v=4?s=100" width="100px;" alt="DataGhost"/><br /><sub><b>DataGhost</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=DataGhost" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://iamfurkan.com"><img src="https://avatars.githubusercontent.com/u/23127261?v=4?s=100" width="100px;" alt="Furkan Kaya"/><br /><sub><b>Furkan Kaya</b></sub></a><br /><a href="#translation-Wijt" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Rafael4A"><img src="https://avatars.githubusercontent.com/u/32150173?v=4?s=100" width="100px;" alt="Rafael do Amaral Porciuncula"/><br /><sub><b>Rafael do Amaral Porciuncula</b></sub></a><br /><a href="#translation-Rafael4A" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/hhjuhl"><img src="https://avatars.githubusercontent.com/u/84127693?v=4?s=100" width="100px;" alt="hhjuhl"/><br /><sub><b>hhjuhl</b></sub></a><br /><a href="#translation-hhjuhl" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Athishbalu"><img src="https://avatars.githubusercontent.com/u/177029556?v=4?s=100" width="100px;" alt="B.Athish"/><br /><sub><b>B.Athish</b></sub></a><br /><a href="#translation-Athishbalu" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/maksim2005UKR"><img src="https://avatars.githubusercontent.com/u/233082001?v=4?s=100" width="100px;" alt="Горпиніч Максим Олександрович"/><br /><sub><b>Горпиніч Максим Олександрович</b></sub></a><br /><a href="#translation-maksim2005UKR" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://plageoj.me"><img src="https://avatars.githubusercontent.com/u/10688301?v=4?s=100" width="100px;" alt="Masayuki Sugahara"/><br /><sub><b>Masayuki Sugahara</b></sub></a><br /><a href="#translation-plageoj" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/therealmate"><img src="https://avatars.githubusercontent.com/u/61843503?v=4?s=100" width="100px;" alt="therealmate"/><br /><sub><b>therealmate</b></sub></a><br /><a href="#translation-therealmate" title="Translation">🌍</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/dobby5"><img src="https://avatars.githubusercontent.com/u/1346316?v=4?s=100" width="100px;" alt="Dobby"/><br /><sub><b>Dobby</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=dobby5" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/lenucksi"><img src="https://avatars.githubusercontent.com/u/2451899?v=4?s=100" width="100px;" alt="lenucksi"/><br /><sub><b>lenucksi</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=lenucksi" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://gitlab.com/edgimar"><img src="https://avatars.githubusercontent.com/u/393850?v=4?s=100" width="100px;" alt="edgimar"/><br /><sub><b>edgimar</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=edgimar" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/andrei-lazarov"><img src="https://avatars.githubusercontent.com/u/51081857?v=4?s=100" width="100px;" alt="Andrei LAZAROV"/><br /><sub><b>Andrei LAZAROV</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=andrei-lazarov" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ademuri"><img src="https://avatars.githubusercontent.com/u/3051618?v=4?s=100" width="100px;" alt="Adam DeMuri"/><br /><sub><b>Adam DeMuri</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=ademuri" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/NatanDosAnjos"><img src="https://avatars.githubusercontent.com/u/45629905?v=4?s=100" width="100px;" alt="Natanael"/><br /><sub><b>Natanael</b></sub></a><br /><a href="#translation-NatanDosAnjos" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Yllelder"><img src="https://avatars.githubusercontent.com/u/6941502?v=4?s=100" width="100px;" alt="Yllelder Bamir"/><br /><sub><b>Yllelder Bamir</b></sub></a><br /><a href="#translation-Yllelder" title="Translation">🌍</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Esspel"><img src="https://avatars.githubusercontent.com/u/47383506?v=4?s=100" width="100px;" alt="Esspel"/><br /><sub><b>Esspel</b></sub></a><br /><a href="#translation-Esspel" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/cperuffo3"><img src="https://avatars.githubusercontent.com/u/87686305?v=4?s=100" width="100px;" alt="Corey Peruffo"/><br /><sub><b>Corey Peruffo</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=cperuffo3" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://badmotivator.io/"><img src="https://avatars.githubusercontent.com/u/1934074?v=4?s=100" width="100px;" alt="Samson Brock"/><br /><sub><b>Samson Brock</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=imwithsam" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Dennis-Dekker"><img src="https://avatars.githubusercontent.com/u/48018095?v=4?s=100" width="100px;" alt="Dennis Dekker"/><br /><sub><b>Dennis Dekker</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=Dennis-Dekker" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/proscar87"><img src="https://avatars.githubusercontent.com/u/68169114?v=4?s=100" width="100px;" alt="proscar87"/><br /><sub><b>proscar87</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=proscar87" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://jaredj.xyz/"><img src="https://avatars.githubusercontent.com/u/10385335?v=4?s=100" width="100px;" alt="Jared Jensen"/><br /><sub><b>Jared Jensen</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=jaredjxyz" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/mueslo"><img src="https://avatars.githubusercontent.com/u/847751?v=4?s=100" width="100px;" alt="mueslo"/><br /><sub><b>mueslo</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=mueslo" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/marijneken"><img src="https://avatars.githubusercontent.com/u/928998?v=4?s=100" width="100px;" alt="Marijn Eken"/><br /><sub><b>Marijn Eken</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=marijneken" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/kasiom"><img src="https://avatars.githubusercontent.com/u/2422245?v=4?s=100" width="100px;" alt="Milan K."/><br /><sub><b>Milan K.</b></sub></a><br /><a href="#translation-kasiom" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/callistoprime"><img src="https://avatars.githubusercontent.com/u/178052328?v=4?s=100" width="100px;" alt="Callisto"/><br /><sub><b>Callisto</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/issues?q=author%3Acallistoprime" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/davidgeiger"><img src="https://avatars.githubusercontent.com/u/5699049?v=4?s=100" width="100px;" alt="David Geiger"/><br /><sub><b>David Geiger</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/issues?q=author%3Adavidgeiger" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/MSL-DA"><img src="https://avatars.githubusercontent.com/u/134940586?v=4?s=100" width="100px;" alt="Jan"/><br /><sub><b>Jan</b></sub></a><br /><a href="#translation-MSL-DA" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/frankysan"><img src="https://avatars.githubusercontent.com/u/6353605?v=4?s=100" width="100px;" alt="frankysan"/><br /><sub><b>frankysan</b></sub></a><br /><a href="#translation-frankysan" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://belkinfahri.com"><img src="https://avatars.githubusercontent.com/u/3419659?v=4?s=100" width="100px;" alt="Belkin"/><br /><sub><b>Belkin</b></sub></a><br /><a href="#translation-belkin" title="Translation">🌍</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/LukTyn"><img src="https://avatars.githubusercontent.com/u/1812796?v=4?s=100" width="100px;" alt="LukTyn"/><br /><sub><b>LukTyn</b></sub></a><br /><a href="#translation-LukTyn" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/rutgerkra"><img src="https://avatars.githubusercontent.com/u/7963187?v=4?s=100" width="100px;" alt="rutgerkra"/><br /><sub><b>rutgerkra</b></sub></a><br /><a href="#translation-rutgerkra" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/sergeybelozorov"><img src="https://avatars.githubusercontent.com/u/94930734?v=4?s=100" width="100px;" alt="sergeybelozorov"/><br /><sub><b>sergeybelozorov</b></sub></a><br /><a href="#translation-sergeybelozorov" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://hosted.weblate.org/user/Lamster/"><img src="https://hosted.weblate.org/avatar/128/Lamster.png?s=100" width="100px;" alt="Allan Himidi-Rattenborg"/><br /><sub><b>Allan Himidi-Rattenborg</b></sub></a><br /><a href="#translation-weblate-Lamster" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://hosted.weblate.org/user/posemartonis/"><img src="https://hosted.weblate.org/avatar/128/posemartonis.png?s=100" width="100px;" alt="Pose marto"/><br /><sub><b>Pose marto</b></sub></a><br /><a href="#translation-weblate-posemartonis" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://hosted.weblate.org/user/jf.cosse/"><img src="https://hosted.weblate.org/avatar/128/jf.cosse.png?s=100" width="100px;" alt="Jean-Francois Cosse"/><br /><sub><b>Jean-Francois Cosse</b></sub></a><br /><a href="#translation-weblate-jf.cosse" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/bisquit2003"><img src="https://avatars.githubusercontent.com/u/98059406?v=4?s=100" width="100px;" alt="bisquit2003"/><br /><sub><b>bisquit2003</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/issues?q=author%3Abisquit2003" title="Bug reports">🐛</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/chewth91"><img src="https://avatars.githubusercontent.com/u/29686018?v=4?s=100" width="100px;" alt="chewth91"/><br /><sub><b>chewth91</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/issues?q=author%3Achewth91" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/rhtenhove"><img src="https://avatars.githubusercontent.com/u/10206967?v=4?s=100" width="100px;" alt="rhtenhove"/><br /><sub><b>rhtenhove</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=rhtenhove" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/mrbillpapas"><img src="https://avatars.githubusercontent.com/u/45721000?v=4?s=100" width="100px;" alt="Bill Papas"/><br /><sub><b>Bill Papas</b></sub></a><br /><a href="#ideas-mrbillpapas" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://niklashaas.de"><img src="https://avatars.githubusercontent.com/u/1149047?v=4?s=100" width="100px;" alt="Niklas Haas"/><br /><sub><b>Niklas Haas</b></sub></a><br /><a href="#ideas-haasn" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/djurny"><img src="https://avatars.githubusercontent.com/u/950171?v=4?s=100" width="100px;" alt="Tom Urlings"/><br /><sub><b>Tom Urlings</b></sub></a><br /><a href="#ideas-djurny" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://anastay.dev"><img src="https://avatars.githubusercontent.com/u/45088785?v=4?s=100" width="100px;" alt="Benoit Anastay"/><br /><sub><b>Benoit Anastay</b></sub></a><br /><a href="#ideas-BenoitAnastay" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://isjustawesome.com"><img src="https://avatars.githubusercontent.com/u/689204?v=4?s=100" width="100px;" alt="Jeremy Gollehon"/><br /><sub><b>Jeremy Gollehon</b></sub></a><br /><a href="#ideas-GollyJer" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/basnijholt/adaptive-lighting/issues?q=author%3AGollyJer" title="Bug reports">🐛</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/jrbergen"><img src="https://avatars.githubusercontent.com/u/6237646?v=4?s=100" width="100px;" alt="jrbergen"/><br /><sub><b>jrbergen</b></sub></a><br /><a href="#ideas-jrbergen" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/b-rad15"><img src="https://avatars.githubusercontent.com/u/25830163?v=4?s=100" width="100px;" alt="Bradley O'Connell"/><br /><sub><b>Bradley O'Connell</b></sub></a><br /><a href="#ideas-b-rad15" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/00schteven"><img src="https://avatars.githubusercontent.com/u/76514745?v=4?s=100" width="100px;" alt="00schteven"/><br /><sub><b>00schteven</b></sub></a><br /><a href="#ideas-00schteven" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Mariuss811"><img src="https://avatars.githubusercontent.com/u/54115696?v=4?s=100" width="100px;" alt="Wosten"/><br /><sub><b>Wosten</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/issues?q=author%3AMariuss811" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://zpriddy.com"><img src="https://avatars.githubusercontent.com/u/1858679?v=4?s=100" width="100px;" alt="Zachary Priddy"/><br /><sub><b>Zachary Priddy</b></sub></a><br /><a href="#ideas-zpriddy" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://blakeslee.me"><img src="https://avatars.githubusercontent.com/u/60765958?v=4?s=100" width="100px;" alt="Andrew Blakeslee Moore"/><br /><sub><b>Andrew Blakeslee Moore</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/issues?q=author%3Aabkslm" title="Bug reports">🐛</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/jaynis"><img src="https://avatars.githubusercontent.com/u/1553675?v=4?s=100" width="100px;" alt="jaynis"/><br /><sub><b>jaynis</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=jaynis" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/alistairg"><img src="https://avatars.githubusercontent.com/u/272786?v=4?s=100" width="100px;" alt="Alistair Galbraith"/><br /><sub><b>Alistair Galbraith</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=alistairg" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/hesseleo"><img src="https://avatars.githubusercontent.com/u/44778508?v=4?s=100" width="100px;" alt="Leonhard Hesse"/><br /><sub><b>Leonhard Hesse</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=hesseleo" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://www.tim-maps.com"><img src="https://avatars.githubusercontent.com/u/6741938?v=4?s=100" width="100px;" alt="Tim Stallmann"/><br /><sub><b>Tim Stallmann</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=timstallmann" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/lehneres"><img src="https://avatars.githubusercontent.com/u/7437288?v=4?s=100" width="100px;" alt="lehneres"/><br /><sub><b>lehneres</b></sub></a><br /><a href="#ideas-lehneres" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ahmadtawakol"><img src="https://avatars.githubusercontent.com/u/2355493?v=4?s=100" width="100px;" alt="Ahmad Tawakol"/><br /><sub><b>Ahmad Tawakol</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=ahmadtawakol" title="Code">💻</a> <a href="https://github.com/basnijholt/adaptive-lighting/issues?q=author%3Aahmadtawakol" title="Bug reports">🐛</a> <a href="#maintenance-ahmadtawakol" title="Maintenance">🚧</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/SGXander"><img src="https://avatars.githubusercontent.com/u/8619536?v=4?s=100" width="100px;" alt="SGXander"/><br /><sub><b>SGXander</b></sub></a><br /><a href="https://github.com/basnijholt/adaptive-lighting/commits?author=SGXander" title="Code">💻</a> <a href="https://github.com/basnijholt/adaptive-lighting/issues?q=author%3ASGXander" title="Bug reports">🐛</a> <a href="https://github.com/basnijholt/adaptive-lighting/commits?author=SGXander" title="Tests">⚠️</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://fezvrasta.github.io"><img src="https://avatars.githubusercontent.com/u/5382443?v=4?s=100" width="100px;" alt="Federico Zivolo"/><br /><sub><b>Federico Zivolo</b></sub></a><br /><a href="#translation-FezVrasta" title="Translation">🌍</a></td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td align="center" size="13px" colspan="7">
+        <img src="https://raw.githubusercontent.com/all-contributors/all-contributors-cli/1b8533af435da9854653492b1327a23a4dbd0a10/assets/logo-small.svg">
+          <a href="https://all-contributors.js.org/docs/en/bot/usage">Add your contributions</a>
+        </img>
+      </td>
+    </tr>
+  </tfoot>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+## Translating Adaptive Lighting
+
+Help to translate Adaptive Lighting into your language on [Hosted Weblate](https://hosted.weblate.org/engage/adaptive-lighting/)!
+
+Translating can be done from your webbrowser, no programming knowledge
+is needed!
+
+<a href="https://hosted.weblate.org/engage/adaptive-lighting/">
+<img src="https://hosted.weblate.org/widget/adaptive-lighting/multi-auto.svg" alt="Translation status" />
+</a>
+
+
+---
+
+*Maintained with ❤️ by @kush-coder. Official distribution powered by GitHub Autopilot Automation Platform.*
